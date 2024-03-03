@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../controller.dart';
 import '../../../core/api_handler/service.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/utils/validators.dart';
@@ -44,8 +45,8 @@ class _LoginState extends ConsumerState<Login> {
   Future<void> _onLogin(BuildContext context) async {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
 
-    _emailController.text = 'agboolaodunayo2016@gmail.com';
-    _passwordController.text = 'azagpworda';
+    // _emailController.text = 'agboolaodunayo2016@gmail.coms';
+    // _passwordController.text = 'Azagpword!1';
 
     if (!_formKey.currentState!.validate()) return;
 
@@ -58,10 +59,7 @@ class _LoginState extends ConsumerState<Login> {
     final password = _passwordController.text;
     final response = await apiService.login(email, password);
 
-    if (!mounted) {
-      // USER EXIT PAGE
-      return;
-    }
+    if (!mounted) return; // USER EXIT PAGE
 
     // UNBLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => false);
@@ -87,15 +85,26 @@ class _LoginState extends ConsumerState<Login> {
     if (user.isVerified) {
       pushToAndClearStack(context, const NavigationPage());
     } else {
-      pushTo(context, const VerifyPage());
+      requestOTP(_emailController.text).then((value) {
+        if (value) pushTo(context, VerifyPage(_emailController.text));
+      });
     }
   }
 
   void _onFailed(String message) {
+    late final String title;
+    if (message == 'User not found' || message == 'Wrong password') {
+      title = 'Incorrect credentials';
+      message =
+          'We could\'t log you in because of an incorrect email or password.';
+    } else {
+      title = 'Oops!!!';
+      message = '$message. Please try again';
+    }
     snackbar(
       context: context,
-      title: 'Incorrect credentials',
-      message: 'We could\'t log you in, either email or password is incorrect',
+      title: title,
+      message: message,
       contentType: ContentType.failure,
     );
   }
@@ -131,130 +140,134 @@ class _LoginState extends ConsumerState<Login> {
     final isLoading = ref.watch(_isLoadingProvider);
 
     return Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Column(
-            children: <Widget>[
-              const CustomAppBar(
-                actions: [],
-              ),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      const SizedBox(height: 20.0),
-                      Text(
-                        'Login',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium!
-                            .copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      Text(
-                        'Login to continue',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          children: <CustomTextField>[
-                            CustomTextField(
-                              labelText: 'Email',
-                              hintText: 'Enter email address',
-                              controller: _emailController,
-                              validator: Validator.validateEmail,
-                              isValidated: isValidated,
-                              margin: const EdgeInsets.only(
-                                top: 25.0,
-                                bottom: 20.0,
-                              ),
-                            ),
-                            CustomTextField(
-                              labelText: 'Password',
-                              hintText: 'Enter password',
-                              controller: _passwordController,
-                              validator: Validator.validateLoginPassword,
-                              isValidated: isValidated,
-                              margin: EdgeInsets.zero,
-                              obscureText: obscureText,
-                              suffixIcon: IconButton(
-                                onPressed: () => ref
-                                    .read(_obscureTextProvider.notifier)
-                                    .update((state) => !state),
-                                icon: Icon(obscureText
-                                    ? CupertinoIcons.eye_slash_fill
-                                    : CupertinoIcons.eye),
-                              ),
-                            ),
-                          ],
+      body: IgnorePointer(
+        ignoring: isLoading,
+        child: Stack(
+          children: <Widget>[
+            Column(
+              children: <Widget>[
+                const CustomAppBar(
+                  actions: [],
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const SizedBox(height: 20.0),
+                        Text(
+                          'Login',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headlineMedium!
+                              .copyWith(fontWeight: FontWeight.w500),
                         ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () =>
-                              pushTo(context, const ForgotPassword()),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Theme.of(context).primaryColor,
+                        Text(
+                          'Login to continue',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: <CustomTextField>[
+                              CustomTextField(
+                                labelText: 'Email',
+                                hintText: 'Enter email address',
+                                controller: _emailController,
+                                validator: Validator.validateEmail,
+                                isValidated: isValidated,
+                                margin: const EdgeInsets.only(
+                                  top: 25.0,
+                                  bottom: 20.0,
+                                ),
+                              ),
+                              CustomTextField(
+                                labelText: 'Password',
+                                hintText: 'Enter password',
+                                controller: _passwordController,
+                                validator: Validator.validateLoginPassword,
+                                isValidated: isValidated,
+                                margin: EdgeInsets.zero,
+                                obscureText: obscureText,
+                                suffixIcon: IconButton(
+                                  onPressed: () => ref
+                                      .read(_obscureTextProvider.notifier)
+                                      .update((state) => !state),
+                                  icon: Icon(obscureText
+                                      ? CupertinoIcons.eye_slash_fill
+                                      : CupertinoIcons.eye),
+                                ),
+                              ),
+                            ],
                           ),
-                          child: const Text('Forgot Password?'),
                         ),
-                      ),
-                      const SizedBox(height: 20.0),
-                      CustomButton(
-                        onPressed: () => _onLogin(context),
-                        isLoading: isLoading,
-                        text: 'Login',
-                      ),
-                    ],
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () =>
+                                pushTo(context, const ForgotPassword()),
+                            style: TextButton.styleFrom(
+                              foregroundColor: Theme.of(context).primaryColor,
+                            ),
+                            child: const Text('Forgot Password?'),
+                          ),
+                        ),
+                        const SizedBox(height: 20.0),
+                        CustomButton(
+                          onPressed: () => _onLogin(context),
+                          isLoading: isLoading,
+                          text: 'Login',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+            Positioned(
+              top: 56,
+              right: 0,
+              child: Image.asset(
+                AppImages.authGrapes,
+                width: 72,
               ),
-            ],
-          ),
-          Positioned(
-            top: 56,
-            right: 0,
-            child: Image.asset(
-              AppImages.authGrapes,
-              width: 72,
             ),
-          ),
-          Positioned(
-            left: -5,
-            bottom: -5,
-            child: Image.asset(
-              AppImages.authCorn,
-              width: 72,
+            Positioned(
+              left: -5,
+              bottom: -5,
+              child: Image.asset(
+                AppImages.authCorn,
+                width: 72,
+              ),
             ),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Material(
-              color: Colors.transparent,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const Text('Don\'t have account?'),
-                  TextButton(
-                    onPressed: () => pushReplacementTo(context, const Signup()),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 4.0,
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: Material(
+                color: Colors.transparent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    const Text('Don\'t have account?'),
+                    TextButton(
+                      onPressed: () =>
+                          pushReplacementTo(context, const Signup()),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10.0,
+                          vertical: 4.0,
+                        ),
+                        minimumSize: Size.zero,
+                        foregroundColor: Theme.of(context).primaryColor,
                       ),
-                      minimumSize: Size.zero,
-                      foregroundColor: Theme.of(context).primaryColor,
+                      child: const Text('Create one'),
                     ),
-                    child: const Text('Create one'),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

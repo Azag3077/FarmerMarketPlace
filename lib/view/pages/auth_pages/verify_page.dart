@@ -1,53 +1,130 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../controller.dart';
+import '../../../core/api_handler/service.dart';
 import '../../../router/route.dart';
+import '../../../utils.dart';
+import '../../widgets/snackbar.dart';
 import '../navigation_pages/main_page.dart';
 import '../../widgets/app_bar.dart';
 import '../../widgets/buttons.dart';
 
-class VerifyPage extends StatefulWidget {
-  const VerifyPage({Key? key}) : super(key: key);
+final _isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
+
+class VerifyPage extends ConsumerStatefulWidget {
+  const VerifyPage(this.email, {Key? key}) : super(key: key);
+  final String email;
 
   @override
-  State<VerifyPage> createState() => _VerifyPageState();
+  ConsumerState<VerifyPage> createState() => _VerifyPageState();
 }
 
-class _VerifyPageState extends State<VerifyPage> {
+class _VerifyPageState extends ConsumerState<VerifyPage> {
   String _code = '';
 
-  void _onResend(BuildContext context) {}
-
-  void _onVerify(BuildContext context, [String? code]) {
-    if ((code ?? _code).length != 6) {
-      debugPrint('Incomplete code');
+  Future<void> _onVerify(BuildContext context, String code) async {
+    if (code.length != 6) {
+      snackbar(
+        context: context,
+        title: 'Incomplete code',
+        message:
+            'Please provide the code sent to your email to verify your account',
+        contentType: ContentType.failure,
+      );
       return;
     }
 
-    if ((code ?? _code) != '123456') {
-      debugPrint('Incorrect code');
-      return;
+    dismissKeyboard();
+
+    // BLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => true);
+
+    final response = await apiService.verifyOtp(widget.email, code);
+
+    if (!mounted) return; // USER EXIT PAGE
+
+    // UNBLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => false);
+
+    switch (response.status) {
+      case ResponseStatus.pending:
+        return;
+      case ResponseStatus.success:
+        return _onSuccessful(response.data!);
+      case ResponseStatus.failed:
+        return _onFailed(response.message!);
+      case ResponseStatus.connectionError:
+        return _onConnectionError();
+      case ResponseStatus.unknownError:
+        return _onUnknownError();
     }
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Verification Code"),
-          content: Text('Code entered is $code'),
-        );
-      },
-    );
-
-    Future.delayed(const Duration(seconds: 2)).then((value) => _onSuccessful());
+    // showDialog(
+    //   context: context,
+    //   builder: (context) {
+    //     return AlertDialog(
+    //       title: const Text("Verification Code"),
+    //       content: Text('Code entered is $code'),
+    //     );
+    //   },
+    // );
   }
 
-  void _onSuccessful() {
+  void _onSuccessful(Map<String, dynamic> data) {
+    // final user = User.fromJson(data);
+    // ref.read(userProvider.notifier).update((state) => user);
+
     pushReplacementTo(context, const NavigationPage());
+  }
+
+  void _onFailed(String message) {
+    late final String title;
+    if (message == 'User not found' || message == 'Wrong password') {
+      title = 'Incorrect credentials';
+      message =
+          'We could\'t log you in because of an incorrect email or password.';
+    } else {
+      title = 'Oops!!!';
+      message = '$message. Please try again';
+    }
+    snackbar(
+      context: context,
+      title: title,
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onConnectionError() {
+    const String message =
+        'A network connection problem interrupted the process. '
+        'Please check your network and try again';
+    snackbar(
+      context: context,
+      title: 'Network error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onUnknownError() {
+    const String message =
+        'An unknown server error occurred, please try again. '
+        'If error persist, please report to the admin';
+    snackbar(
+      context: context,
+      title: 'Unknown server error',
+      message: message,
+      contentType: ContentType.failure,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(_isLoadingProvider);
+
     return Scaffold(
       appBar: const CustomAppBar(),
       body: Padding(
@@ -55,7 +132,6 @@ class _VerifyPageState extends State<VerifyPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            const SizedBox(height: 20.0),
             Text(
               'Verify your account',
               style: Theme.of(context)
@@ -63,6 +139,7 @@ class _VerifyPageState extends State<VerifyPage> {
                   .headlineMedium!
                   .copyWith(fontWeight: FontWeight.w500),
             ),
+            const SizedBox(height: 8.0),
             Text(
               'Please enter the code we just sent to your email',
               style: Theme.of(context).textTheme.bodyMedium,
@@ -73,6 +150,8 @@ class _VerifyPageState extends State<VerifyPage> {
               focusedBorderColor: Theme.of(context).primaryColor,
               autoFocus: true,
               showFieldAsBox: true,
+              handleControllers: (controllers) =>
+                  _code = controllers.map((e) => e?.text).join(),
               onSubmit: (String code) => _onVerify(context, code),
               onCodeChanged: (String code) => _code = code,
             ),
@@ -82,7 +161,7 @@ class _VerifyPageState extends State<VerifyPage> {
               children: <Widget>[
                 const Text('Didn\'t get the code?'),
                 TextButton(
-                  onPressed: () => _onResend(context),
+                  onPressed: () => requestOTP(widget.email, true),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10.0,
@@ -97,7 +176,8 @@ class _VerifyPageState extends State<VerifyPage> {
             ),
             const SizedBox(height: 15.0),
             CustomButton(
-              onPressed: () => _onVerify(context),
+              onPressed: () => _onVerify(context, _code),
+              isLoading: isLoading,
               text: 'Submit',
             ),
           ],

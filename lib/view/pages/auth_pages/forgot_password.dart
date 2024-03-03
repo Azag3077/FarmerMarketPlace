@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/api_handler/service.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/utils/validators.dart';
 import '../../../router/route/app_routes.dart';
 import '../../../utils.dart';
 import '../../widgets/app_bar.dart';
 import '../../widgets/buttons.dart';
+import '../../widgets/snackbar.dart';
 import '../../widgets/text_fields.dart';
 import 'signup.dart';
 
@@ -30,16 +32,80 @@ class _ForgotPasswordState extends ConsumerState<ForgotPassword> {
     super.dispose();
   }
 
-  void _onSubmit(BuildContext context) {
+  Future<void> _onSubmit(BuildContext context) async {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
     if (!_formKey.currentState!.validate()) return;
+
     dismissKeyboard();
 
+    // BLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => true);
+
+    final email = _emailController.text;
+    final response = await apiService.forgotPassword(email);
+
+    if (!mounted) return; // USER EXIT PAGE
+
+    // UNBLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => false);
+
+    switch (response.status) {
+      case ResponseStatus.pending:
+        return;
+      case ResponseStatus.success:
+        return _onSuccessful(response.data!);
+      case ResponseStatus.failed:
+        return _onFailed(response.message!);
+      case ResponseStatus.connectionError:
+        return _onConnectionError();
+      case ResponseStatus.unknownError:
+        return _onUnknownError();
+    }
   }
 
-  void _onCreateOne(BuildContext context) =>
-      pushReplacementTo(context, const Signup());
+  void _onSuccessful(Map<String, dynamic> data) {}
+
+  void _onFailed(String message) {
+    late final String title;
+    if (message == 'User not found') {
+      title = 'Incorrect credentials';
+      message = 'The specified email was not found on our database. '
+          'Please confirm the email and try again';
+    } else {
+      title = 'Oops!!!';
+      message = '$message. Please try again';
+    }
+    snackbar(
+      context: context,
+      title: title,
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onConnectionError() {
+    const String message =
+        'A network connection problem interrupted the process. '
+        'Please check your network and try again';
+    snackbar(
+      context: context,
+      title: 'Network error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onUnknownError() {
+    const String message =
+        'An unknown server error occurred, please try again. '
+        'If error persist, please report to the admin';
+    snackbar(
+      context: context,
+      title: 'Unknown server error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -117,7 +183,7 @@ class _ForgotPasswordState extends ConsumerState<ForgotPassword> {
               children: <Widget>[
                 const Text('Don\'t have account?'),
                 TextButton(
-                  onPressed: () => _onCreateOne(context),
+                  onPressed: () => pushReplacementTo(context, const Signup()),
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10.0,

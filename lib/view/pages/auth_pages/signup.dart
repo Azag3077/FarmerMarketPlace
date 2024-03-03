@@ -3,11 +3,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../controller.dart';
+import '../../../core/api_handler/service.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/utils/validators.dart';
+import '../../../models/user.dart';
+import '../../../providers.dart';
 import '../../../utils.dart';
 import '../../widgets/app_bar.dart';
 import '../../widgets/buttons.dart';
+import '../../widgets/snackbar.dart';
 import '../../widgets/text_fields.dart';
 import 'login.dart';
 import 'verify_page.dart';
@@ -42,21 +47,82 @@ class _SignupState extends ConsumerState<Signup> {
     super.dispose();
   }
 
-  void _onCreateAccount(BuildContext context) {
+  Future<void> _onCreateAccount(BuildContext context) async {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
     if (!_formKey.currentState!.validate()) return;
     dismissKeyboard();
 
+    // BLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => true);
-    Future.delayed(const Duration(seconds: 2)).then((value) => _verifyEmail());
+
+    final firstname = _firstnameController.text;
+    final lastname = _lastnameController.text;
+    final email = _emailController.text;
+    final password = _password1Controller.text;
+    final response =
+        await apiService.signup(firstname, lastname, email, password);
+
+    if (!mounted) return; // USER EXIT PAGE
+
+    // UNBLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => false);
+
+    switch (response.status) {
+      case ResponseStatus.pending:
+        return;
+      case ResponseStatus.success:
+        return _onSuccessful(response.data!);
+      case ResponseStatus.failed:
+        return _onFailed(response.message!);
+      case ResponseStatus.connectionError:
+        return _onConnectionError();
+      case ResponseStatus.unknownError:
+        return _onUnknownError();
+    }
   }
 
-  void _verifyEmail() {
-    pushTo(context, const VerifyPage());
+  void _onSuccessful(Map<String, dynamic> data) {
+    // [log] {status: SUCCESS, message: User created, data: {id: 68, firstname: Azag, lastname: Python, password: $2b$10$1qvchqOQNqihivHrQ28aPuIP/KgcLrI5Pm5ok66tcJ63S1nnh4AEO, email: agboolaodunayo2016@gmail.coms, phone: , code: null, pushtoken: null, is_verified: 0}}
+    final user = User.fromJson(data);
+    ref.read(userProvider.notifier).update((state) => user);
+
+    requestOTP(_emailController.text).then((value) {
+      if (value) pushTo(context, VerifyPage(_emailController.text));
+    });
   }
 
-  void _onCreateOne(BuildContext context) =>
-      pushReplacementTo(context, const Login());
+  void _onFailed(String message) {
+    snackbar(
+      context: context,
+      title: 'Oops!!!',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onConnectionError() {
+    const String message =
+        'A network connection problem interrupted the process. '
+        'Please check your network and try again';
+    snackbar(
+      context: context,
+      title: 'Network error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onUnknownError() {
+    const String message =
+        'An unknown server error occurred, please try again. '
+        'If error persist, please report to the admin';
+    snackbar(
+      context: context,
+      title: 'Unknown server error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -65,21 +131,21 @@ class _SignupState extends ConsumerState<Signup> {
     final obscureText2 = ref.watch(_obscureText2Provider);
     final isLoading = ref.watch(_isLoadingProvider);
 
-    return Stack(
-      children: <Widget>[
-        Scaffold(
-          appBar: const CustomAppBar(
-            actions: [],
-          ),
-          body: Column(
+    return Scaffold(
+      body: Stack(
+        children: <Widget>[
+          Column(
             children: <Widget>[
+              const CustomAppBar(
+                actions: [],
+              ),
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      const SizedBox(height: 20.0),
+                      const SizedBox(height: 10.0),
                       Text(
                         'Register',
                         style: Theme.of(context)
@@ -97,7 +163,7 @@ class _SignupState extends ConsumerState<Signup> {
                           children: <CustomTextField>[
                             CustomTextField(
                               labelText: 'First Name',
-                              controller: _emailController,
+                              controller: _firstnameController,
                               validator: Validator.validateName,
                               isValidated: isValidated,
                               margin: const EdgeInsets.only(
@@ -166,48 +232,48 @@ class _SignupState extends ConsumerState<Signup> {
               const SizedBox(height: 42.0),
             ],
           ),
-        ),
-        Positioned(
-          top: 56,
-          right: 0,
-          child: Image.asset(
-            AppImages.authGrapes,
-            width: 72,
-          ),
-        ),
-        Positioned(
-          left: -5,
-          bottom: -5,
-          child: Image.asset(
-            AppImages.authCorn,
-            width: 72,
-          ),
-        ),
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Material(
-            color: Colors.transparent,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const Text('Already have account?'),
-                TextButton(
-                  onPressed: () => _onCreateOne(context),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10.0,
-                      vertical: 4.0,
-                    ),
-                    minimumSize: Size.zero,
-                    foregroundColor: Theme.of(context).primaryColor,
-                  ),
-                  child: const Text('Login'),
-                ),
-              ],
+          Positioned(
+            top: 56,
+            right: 0,
+            child: Image.asset(
+              AppImages.authGrapes,
+              width: 72,
             ),
           ),
-        ),
-      ],
+          Positioned(
+            left: -5,
+            bottom: -5,
+            child: Image.asset(
+              AppImages.authCorn,
+              width: 72,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Material(
+              color: Colors.transparent,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  const Text('Already have account?'),
+                  TextButton(
+                    onPressed: () => pushReplacementTo(context, const Login()),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10.0,
+                        vertical: 4.0,
+                      ),
+                      minimumSize: Size.zero,
+                      foregroundColor: Theme.of(context).primaryColor,
+                    ),
+                    child: const Text('Login'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

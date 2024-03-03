@@ -4,7 +4,7 @@ class User {
   final String lastname;
   final String email;
   final String phone;
-  final String code;
+  final String? code;
   final String? pushToken;
   final bool isVerified;
 

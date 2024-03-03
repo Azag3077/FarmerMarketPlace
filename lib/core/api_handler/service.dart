@@ -1,105 +1,83 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
-import 'package:farmers_marketplace/core/api_handler/endpoints.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
-const String success = 'SUCCESS';
-const String failed = 'FAILED';
+import 'endpoints.dart';
+import 'models.dart';
+export 'models.dart';
 
 class ApiService {
-  Future<Response> login(String email, String password) async {
-    try {
-      final Map<String, dynamic> loginData = {
-        'email': email.trim(),
-        'password': password.trim(),
-      };
+  final _headers = {"Content-Type": "application/json"};
+  final String success = 'SUCCESS', failed = 'FAILED';
 
+  Future<Response> _requests(Uri url, Map<String, dynamic> data) async {
+    try {
       final http.Response response = await http.post(
-        ApiEndpoints.login,
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode(loginData),
+        url,
+        headers: _headers,
+        body: jsonEncode(data),
       );
 
       final responseData = jsonDecode(response.body);
       final result = Response.fromJson(responseData);
 
+      log(responseData.toString());
+
       if (result.statusMessage == success) {
         return result.copyWith(status: ResponseStatus.success);
       }
       return result.copyWith(status: ResponseStatus.failed);
-    } on ConnectionState catch (e) {
-      log('[ERROR] $e');
+    } on SocketException catch (e) {
+      log('[SocketException] $e');
       return Response(status: ResponseStatus.connectionError);
     } catch (e) {
+      log('[UNKNOWN ERROR] $e');
       return Response(status: ResponseStatus.unknownError);
     }
   }
 
-  // Future<void> signupUser() async {
-  //   final String signupUrl = "$baseUrl$signupEndpoint";
-  //   final Map<String, dynamic> signupData = {
-  //     "firstname": "YourFirstName",
-  //     "lastname": "YourLastName",
-  //     "email": "your_email@example.com",
-  //     "password": "your_password",
-  //   };
-  //
-  //   final http.Response response = await http.post(
-  //     Uri.parse(signupUrl),
-  //     headers: {"Content-Type": "application/json"},
-  //     body: jsonEncode(signupData),
-  //   );
-  //
-  //   final Map<String, dynamic> responseData = jsonDecode(response.body);
-  //   print("Signup Response: $responseData");
-  // }
-}
-
-class Response {
-  final String? message;
-  final String? statusMessage;
-  final ResponseStatus status;
-  final Map<String, dynamic>? data;
-
-  Response({
-    this.message,
-    this.statusMessage,
-    required this.status,
-    this.data,
-  });
-
-  factory Response.fromJson(Map<String, dynamic> data) {
-    return Response(
-      message: data['message'],
-      statusMessage: data['status'],
-      status: ResponseStatus.pending,
-      data: data['data'],
-    );
+  Future<Response> login(String email, String password) async {
+    final data = {'email': email.trim(), 'password': password.trim()};
+    return await _requests(ApiEndpoints.login, data);
   }
 
-  Response copyWith({
-    String? message,
-    String? statusMessage,
-    ResponseStatus? status,
-    Map<String, dynamic>? data,
-  }) {
-    return Response(
-      message: message ?? this.message,
-      statusMessage: statusMessage ?? this.statusMessage,
-      status: status ?? this.status,
-      data: data ?? this.data,
-    );
+  Future<Response> signup(
+      String firstname, String lastname, String email, String password) async {
+    final data = {
+      'firstname': firstname.trim(),
+      'lastname': lastname.trim(),
+      'email': email.trim(),
+      'password': password.trim(),
+    };
+    return await _requests(ApiEndpoints.signup, data);
   }
-}
 
-enum ResponseStatus {
-  pending,
-  success,
-  failed,
-  connectionError,
-  unknownError,
+  Future<Response> forgotPassword(String email) async {
+    final data = {'email': email.trim()};
+    return await _requests(ApiEndpoints.forgotPassword, data);
+  }
+
+  Future<Response> confirmReset(
+      String email, String password, String otp) async {
+    final data = {
+      'email': email.trim(),
+      'password': password.trim(),
+      'otp': otp.trim(),
+    };
+    return await _requests(ApiEndpoints.confirmReset, data);
+  }
+
+  Future<Response> sendOtp(String email) async {
+    final data = {'email': email.trim()};
+    return await _requests(ApiEndpoints.sendOtp, data);
+  }
+
+  Future<Response> verifyOtp(String email, String otp) async {
+    final data = {'email': email.trim(), 'otp': otp.trim()};
+    return await _requests(ApiEndpoints.verifyOtp, data);
+  }
 }
 
 final apiService = ApiService();

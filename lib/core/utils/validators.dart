@@ -61,12 +61,12 @@ class Validator {
     }
     String msg = 'Password must contain ;';
 
-    if (value.trim().length < 6) msg += '\nat least 7 characters';
-    if (!value.trim().hasDigit) msg += '\nat least one digit';
-    if (!value.trim().hasLowercase) msg += '\nat least one lowercase';
-    if (!value.trim().hasUppercase) msg += '\nat least one uppercase';
+    if (value.trim().length < 6) msg += '\n - at least 7 characters';
+    if (!value.trim().hasDigit) msg += '\n - at least one digit';
+    if (!value.trim().hasLowercase) msg += '\n - at least one lowercase';
+    if (!value.trim().hasUppercase) msg += '\n - at least one uppercase';
     if (!value.trim().hasSpecialCharacters) {
-      msg += '\nat least one special character';
+      msg += '\n - at least one special character';
     }
     if (msg.contains('\n')) return msg;
 

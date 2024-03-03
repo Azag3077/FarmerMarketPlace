@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/api_handler/service.dart';
 import 'models/product.dart';
 import 'providers.dart';
 
@@ -42,5 +43,22 @@ void onCartIncrement(
     });
   } else {
     ref.read(cartsProvider.notifier).update((state) => [...state, prd]);
+  }
+}
+
+Future<bool> requestOTP(String email, [bool resend = false]) async {
+  final response = await apiService.sendOtp(email);
+
+  switch (response.status) {
+    case ResponseStatus.pending:
+      return await requestOTP(email);
+    case ResponseStatus.success:
+      return true;
+    case ResponseStatus.failed:
+      return false;
+    case ResponseStatus.connectionError:
+      return false;
+    case ResponseStatus.unknownError:
+      return false;
   }
 }
