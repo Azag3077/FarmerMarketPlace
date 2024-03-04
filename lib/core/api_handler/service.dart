@@ -12,6 +12,8 @@ class ApiService {
   final _headers = {"Content-Type": "application/json"};
   final String success = 'SUCCESS', failed = 'FAILED';
 
+  // country_state_city
+
   Future<Response> _requests(Uri url, Map<String, dynamic> data) async {
     try {
       final http.Response response = await http.post(
@@ -77,6 +79,24 @@ class ApiService {
   Future<Response> verifyOtp(String email, String otp) async {
     final data = {'email': email.trim(), 'otp': otp.trim()};
     return await _requests(ApiEndpoints.verifyOtp, data);
+  }
+
+  Future<void> az() async {
+    var headers = {'X-CSCAPI-KEY': 'API_KEY'};
+
+    var request = http.Request(
+        'GET', Uri.parse('https://api.countrystatecity.in/v1/states'));
+
+    request.headers.addAll(headers);
+    // request.;
+
+    http.StreamedResponse response = await request.send();
+
+    if (response.statusCode == 200) {
+      print(await response.stream.bytesToString());
+    } else {
+      print(response.reasonPhrase);
+    }
   }
 }
 
