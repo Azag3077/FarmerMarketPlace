@@ -1,6 +1,9 @@
+import 'package:farmers_marketplace/core/extensions/string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../providers.dart';
 import '../../../router/route.dart';
 import '../../widgets/app_bar.dart';
 import '../../widgets/list_tile.dart';
@@ -12,7 +15,7 @@ import '../settings_page.dart';
 import '../supports.dart';
 import '../terms_and_conditions.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends ConsumerWidget {
   const ProfilePage({
     Key? key,
     this.leadingActionButton,
@@ -20,17 +23,13 @@ class ProfilePage extends StatelessWidget {
   final VoidCallback? leadingActionButton;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider)!;
+
     return Scaffold(
       appBar: CustomAppBar(
         title: 'Profile',
         leadingActionButton: leadingActionButton,
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(CupertinoIcons.cart),
-          ),
-        ],
       ),
       body: Column(
         children: <Widget>[
@@ -57,11 +56,16 @@ class ProfilePage extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                const Text('Username'),
+                                Text(
+                                  '${user.firstname.title}'
+                                  ' ${user.lastname.title}',
+                                  style:
+                                      Theme.of(context).textTheme.titleMedium,
+                                ),
                                 const SizedBox(height: 4.0),
                                 Text(
-                                  'user@gmail.com',
-                                  style: Theme.of(context).textTheme.bodyLarge,
+                                  user.email,
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
                             ),

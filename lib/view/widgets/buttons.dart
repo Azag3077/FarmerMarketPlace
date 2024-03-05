@@ -13,18 +13,22 @@ class CustomButton extends StatelessWidget {
     this.margin = const EdgeInsets.only(bottom: 20),
     this.type = CustomButtonType.elevated,
     this.isLoading = false,
+    this.height = 48.0,
+    this.backgroundColor,
   }) : super(key: key);
   final String text;
   final EdgeInsets? margin;
   final VoidCallback? onPressed;
   final CustomButtonType type;
   final bool isLoading;
+  final double height;
+  final Color? backgroundColor;
 
   ButtonStyle _style(BuildContext context) {
     switch (type) {
       case CustomButtonType.elevated:
         return ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).primaryColor,
+          backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
           disabledBackgroundColor:
@@ -32,7 +36,7 @@ class CustomButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
-          minimumSize: const Size(double.infinity, 48.0),
+          minimumSize: Size(double.infinity, height),
         );
       case CustomButtonType.outlined:
         return OutlinedButton.styleFrom(
@@ -44,7 +48,7 @@ class CustomButton extends StatelessWidget {
             color: Theme.of(context).primaryColor,
           ),
           elevation: 0,
-          minimumSize: const Size(double.infinity, 48.0),
+          minimumSize: Size(double.infinity, height),
         );
     }
   }

@@ -1,11 +1,15 @@
+import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/api_handler/models.dart';
+import '../../core/api_handler/service.dart';
 import '../../core/utils/validators.dart';
 import '../../utils.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/buttons.dart';
+import '../widgets/snackbar.dart';
 import '../widgets/text_fields.dart';
 
 final _isValidatedProvider = StateProvider.autoDispose<bool>((ref) => false);
@@ -35,15 +39,87 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     super.dispose();
   }
 
-  void _onReset(BuildContext context) {
+  Future<void> _onReset(BuildContext context) async {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
     if (!_formKey.currentState!.validate()) return;
+
     dismissKeyboard();
 
+    // BLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => true);
 
-    Future.delayed(const Duration(seconds: 2)).then((value) =>
-        ref.read(_isLoadingProvider.notifier).update((state) => true));
+    final id = ref.read(userProvider)!.id;
+    final oldPassword = _password1Controller.text;
+    final newPassword = _password2Controller.text;
+    final response =
+        await apiService.changePassword(id, oldPassword, newPassword);
+
+    if (!mounted) return; // USER EXIT PAGE
+
+    // UNBLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => false);
+
+    switch (response.status) {
+      case ResponseStatus.pending:
+        return;
+      case ResponseStatus.success:
+        return _onSuccessful(response.message!);
+      case ResponseStatus.failed:
+        return _onFailed(response.message!);
+      case ResponseStatus.connectionError:
+        return _onConnectionError();
+      case ResponseStatus.unknownError:
+        return _onUnknownError();
+    }
+  }
+
+  void _onSuccessful(String message) {
+    snackbar(
+      context: context,
+      title: 'Successful',
+      message: message,
+    );
+  }
+
+  void _onFailed(String message) {
+    late final String title;
+    if (message == 'Old password not correct' ||
+        message == 'Old Password is not correct') {
+      title = 'Wrong password!';
+    } else {
+      title = 'Oops!!!';
+      message = '$message. Please try again';
+    }
+    snackbar(
+      context: context,
+      title: title,
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onConnectionError() {
+    const String message =
+        'A network connection problem interrupted the process. '
+        'Please check your network and try again';
+    snackbar(
+      context: context,
+      title: 'Network error',
+      message: message,
+      contentType: ContentType.failure,
+    );
+  }
+
+  void _onUnknownError() {
+    const String message =
+        'An unknown server error occurred, please try again. '
+        'If error persist, please report to the admin';
+    snackbar(
+      context: context,
+      title: 'Unknown server error',
+      message: message,
+      contentType: ContentType.failure,
+    );
   }
 
   @override
@@ -123,6 +199,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
               onPressed: () => _onReset(context),
               isLoading: isLoading,
               text: 'Reset',
+              margin: const EdgeInsets.only(top: 20.0),
             ),
           ],
         ),

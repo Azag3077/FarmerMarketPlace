@@ -5,10 +5,14 @@ class CustomListTile extends StatelessWidget {
     Key? key,
     this.onTap,
     this.leadingIconData,
+    this.leadingIconColor,
+    this.textColor,
     required this.title,
   }) : super(key: key);
   final VoidCallback? onTap;
   final IconData? leadingIconData;
+  final Color? leadingIconColor;
+  final Color? textColor;
   final String title;
 
   @override
@@ -20,16 +24,20 @@ class CustomListTile extends StatelessWidget {
           : Container(
               padding: const EdgeInsets.all(10.0),
               decoration: BoxDecoration(
-                color: Theme.of(context).primaryColor.withOpacity(.08),
+                color: (leadingIconColor ?? Theme.of(context).primaryColor)
+                    .withOpacity(.08),
                 borderRadius: BorderRadius.circular(8.0),
               ),
               child: Icon(
                 leadingIconData!,
-                color: Colors.grey.shade600,
+                color: leadingIconColor ?? Colors.grey.shade600,
                 size: 20.0,
               ),
             ),
-      title: Text(title),
+      title: Text(
+        title,
+        style: TextStyle(color: textColor),
+      ),
       trailing: const Icon(
         Icons.chevron_right,
         color: Colors.grey,

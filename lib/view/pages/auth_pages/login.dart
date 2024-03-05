@@ -175,6 +175,7 @@ class _LoginState extends ConsumerState<Login> {
                                 labelText: 'Email',
                                 hintText: 'Enter email address',
                                 controller: _emailController,
+                                keyboardType: TextInputType.emailAddress,
                                 validator: Validator.validateEmail,
                                 isValidated: isValidated,
                                 margin: const EdgeInsets.only(

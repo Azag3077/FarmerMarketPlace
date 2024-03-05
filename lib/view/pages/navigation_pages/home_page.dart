@@ -16,8 +16,11 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(userProvider)!;
     final products = ref.watch(productsProvider);
     final carts = ref.watch(cartsProvider);
+
+    // final categories = ref.watch(categoriesProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -28,7 +31,7 @@ class HomePage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              'Hi User',
+              user.firstname,
               style: Theme.of(context).textTheme.titleLarge!.copyWith(
                     color: Colors.blueGrey.shade700,
                     fontWeight: FontWeight.w500,

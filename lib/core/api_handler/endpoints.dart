@@ -1,7 +1,6 @@
 class ApiEndpoints {
   static const String baseUrl = 'https://app.farmersmarketplace.ng';
 
-  // AUTH --> all post
   static const String _auth = '$baseUrl/auth';
   static final Uri login = Uri.parse('$_auth/login'); // post
   static final Uri signup = Uri.parse('$_auth/signup'); // post
@@ -11,12 +10,17 @@ class ApiEndpoints {
   static final Uri verifyOtp = Uri.parse('$_auth/verifyOtp'); // post
 
   static const String user = '$baseUrl/user';
+  static const editProfile = '$user/editProfile';
+  static const delete = '$user/delete';
+  static const changePassword = '$user/changePassword';
+
+  static final Uri categories = Uri.parse('$baseUrl/categories');
+
   static const String address = '$baseUrl/address';
   static const String search = '$baseUrl/search';
   static const String cart = '$baseUrl/cart';
   static const String like = '$baseUrl/like';
   static const String shipping = '$baseUrl/shipping';
-  static const String categories = '$baseUrl/categories';
   static const String products = '$baseUrl/products';
   static const String orders = '$baseUrl/orders';
   static const String notifications = '$baseUrl/notifications';

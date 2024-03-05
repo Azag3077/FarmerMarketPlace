@@ -4,7 +4,6 @@ class User {
   final String lastname;
   final String email;
   final String phone;
-  final String? code;
   final String? pushToken;
   final bool isVerified;
 
@@ -14,7 +13,6 @@ class User {
     required this.lastname,
     required this.email,
     required this.phone,
-    required this.code,
     required this.pushToken,
     required this.isVerified,
   });
@@ -26,9 +24,25 @@ class User {
       lastname: data['lastname'],
       email: data['email'],
       phone: data['phone'],
-      code: data['code'],
       pushToken: data['pushtoken'],
       isVerified: data['is_verified'] == 1,
+    );
+  }
+
+  User copyWith({
+    String? firstname,
+    String? lastname,
+    String? email,
+    String? phone,
+  }) {
+    return User(
+      id: id,
+      firstname: firstname ?? this.firstname,
+      lastname: lastname ?? this.lastname,
+      email: email ?? this.email,
+      phone: phone ?? this.phone,
+      pushToken: pushToken,
+      isVerified: isVerified,
     );
   }
 }
