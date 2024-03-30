@@ -1,78 +1,90 @@
-import 'package:farmers_marketplace/core/constants/assets.dart';
+import 'package:farmers_marketplace/core/api_handler/endpoints.dart';
+import 'package:flutter/cupertino.dart';
 
 class Product {
   Product({
     required this.id,
+    required this.categoryId,
     required this.name,
-    required this.image,
     required this.price,
-    required this.cartCount,
+    required this.discount,
+    required this.unit,
+    required this.weight,
+    required this.image,
+    required this.description,
+    required this.quantity,
+    required this.isFeatured,
     required this.rating,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.userId,
+    required this.prodId,
+    required this.cartCount,
   });
-  final String id;
-  final String name;
-  final String image;
-  final double price;
-  final int cartCount;
-  final int rating;
 
-  Product copyWith({
-    String? name,
-    String? image,
-    double? price,
-    int? cartCount,
-    int? rating,
-  }) {
+  final int id;
+  final int categoryId;
+  final String name;
+  final double price;
+  final double discount;
+  final String unit;
+  final double weight;
+  final String image;
+  final String description;
+  final int quantity;
+  final String isFeatured;
+  final int rating;
+  final int status;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final int? userId;
+  final int? prodId;
+  final int cartCount;
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'],
+      categoryId: json['category_id'],
+      name: json['product_name'],
+      price: json['price'].toDouble(),
+      discount: json['product_discount'].toDouble(),
+      unit: json['unit'],
+      weight: json['product_weight'].toDouble(),
+      image: '${ApiEndpoints.productImage}/${json['main_image']}',
+      description: json['description'],
+      quantity: json['quantity'],
+      isFeatured: json['is_featured'],
+      rating: json['rating'],
+      status: json['status'],
+      createdAt: DateTime.parse(json['created_at']),
+      updatedAt: DateTime.parse(json['updated_at']),
+      userId: json['user_id'],
+      prodId: json['prod_id'],
+      cartCount: json['qty'] ?? 0,
+    );
+  }
+
+  Product copyWith({int? cartCount}) {
     return Product(
       id: id,
-      name: name ?? this.name,
-      image: image ?? this.image,
-      price: price ?? this.price,
+      categoryId: categoryId,
+      name: name,
+      price: price,
+      discount: discount,
+      unit: unit,
+      weight: weight,
+      image: image,
+      description: description,
+      quantity: quantity,
+      isFeatured: isFeatured,
+      rating: rating,
+      status: status,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      userId: userId,
+      prodId: prodId,
       cartCount: cartCount ?? this.cartCount,
-      rating: rating ?? this.rating,
     );
   }
 }
-
-final dummyProducts = <Product>[
-  Product(
-    id: '1',
-    name: 'Fresh fruits',
-    image: AppImages.fruits,
-    price: 500,
-    cartCount: 0,
-    rating: 3,
-  ),
-  Product(
-    id: '2',
-    name: 'Fresh fruits',
-    image: AppImages.fruits,
-    price: 500,
-    cartCount: 0,
-    rating: 3,
-  ),
-  Product(
-    id: '3',
-    name: 'Fresh fruits',
-    image: AppImages.fruits,
-    price: 500,
-    cartCount: 0,
-    rating: 3,
-  ),
-  Product(
-    id: '4',
-    name: 'Fresh fruits',
-    image: AppImages.fruits,
-    price: 500,
-    cartCount: 0,
-    rating: 3,
-  ),
-  Product(
-    id: '5',
-    name: 'Fresh fruits',
-    image: AppImages.fruits,
-    price: 500,
-    cartCount: 0,
-    rating: 3,
-  ),
-];

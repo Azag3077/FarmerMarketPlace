@@ -58,7 +58,10 @@ class ConfirmDialog extends StatelessWidget {
               const SizedBox(width: 10.0),
               Expanded(
                 child: CustomButton(
-                  onPressed: onAction,
+                  onPressed: () {
+                    pop(context);
+                    onAction?.call();
+                  },
                   text: actionLabel,
                   height: 40.0,
                   backgroundColor: Theme.of(context).colorScheme.error,

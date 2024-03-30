@@ -17,12 +17,6 @@ class NotificationPage extends StatelessWidget {
       appBar: CustomAppBar(
         title: 'Notifications',
         leadingActionButton: leadingActionButton,
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(CupertinoIcons.cart),
-          ),
-        ],
       ),
       body: Center(
         child: Column(

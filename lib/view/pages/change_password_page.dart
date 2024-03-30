@@ -1,9 +1,8 @@
-import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/api_handler/models.dart';
+import '../../azag.dart';
 import '../../core/api_handler/service.dart';
 import '../../core/utils/validators.dart';
 import '../../utils.dart';
@@ -39,39 +38,51 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     super.dispose();
   }
 
-  Future<void> _onReset(BuildContext context) async {
-    ref.read(_isValidatedProvider.notifier).update((state) => true);
-    if (!_formKey.currentState!.validate()) return;
-
-    dismissKeyboard();
-
-    // BLOCK USER INTERACTION
-    ref.read(_isLoadingProvider.notifier).update((state) => true);
-
-    final id = ref.read(userProvider)!.id;
-    final oldPassword = _password1Controller.text;
-    final newPassword = _password2Controller.text;
-    final response =
-        await apiService.changePassword(id, oldPassword, newPassword);
-
-    if (!mounted) return; // USER EXIT PAGE
-
-    // UNBLOCK USER INTERACTION
-    ref.read(_isLoadingProvider.notifier).update((state) => false);
-
-    switch (response.status) {
-      case ResponseStatus.pending:
-        return;
-      case ResponseStatus.success:
-        return _onSuccessful(response.message!);
-      case ResponseStatus.failed:
-        return _onFailed(response.message!);
-      case ResponseStatus.connectionError:
-        return _onConnectionError();
-      case ResponseStatus.unknownError:
-        return _onUnknownError();
-    }
-  }
+  // Future<void> _onReset(BuildContext context) async {
+  //   final user = ref.read(appDataProvider).user;
+  //
+  //   if (user == null) {
+  //     snackbar(
+  //       context: context,
+  //       title: 'Oops!!!',
+  //       contentType: ContentType.warning,
+  //       message: 'Something went wrong. Please'
+  //           'check you connection and try again.',
+  //     );
+  //     return;
+  //   }
+  //
+  //   ref.read(_isValidatedProvider.notifier).update((state) => true);
+  //   if (!_formKey.currentState!.validate()) return;
+  //
+  //   dismissKeyboard();
+  //
+  //   // BLOCK USER INTERACTION
+  //   ref.read(_isLoadingProvider.notifier).update((state) => true);
+  //
+  //   final oldPassword = _password1Controller.text;
+  //   final newPassword = _password2Controller.text;
+  //   final response =
+  //       await apiService.changePassword(user.id, oldPassword, newPassword);
+  //
+  //   if (!mounted) return; // USER EXIT PAGE
+  //
+  //   // UNBLOCK USER INTERACTION
+  //   ref.read(_isLoadingProvider.notifier).update((state) => false);
+  //
+  //   switch (response.status) {
+  //     case ResponseStatus.pending:
+  //       return;
+  //     case ResponseStatus.success:
+  //       return _onSuccessful(response.message!);
+  //     case ResponseStatus.failed:
+  //       return _onFailed(response.message!);
+  //     case ResponseStatus.connectionError:
+  //       return _onConnectionError();
+  //     case ResponseStatus.unknownError:
+  //       return _onUnknownError();
+  //   }
+  // }
 
   void _onSuccessful(String message) {
     snackbar(
@@ -131,7 +142,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     final isLoading = ref.watch(_isLoadingProvider);
 
     return Scaffold(
-      appBar: CustomAppBar(
+      appBar: const CustomAppBar(
         title: 'Change Password',
         actions: <Widget>[],
       ),
@@ -160,7 +171,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
                     ),
                   ),
                   CustomTextField(
-                    labelText: 'Hew Password',
+                    labelText: 'New Password',
                     hintText: 'Enter new password',
                     controller: _password2Controller,
                     validator: Validator.validatePassword1,
@@ -196,7 +207,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
               ),
             ),
             CustomButton(
-              onPressed: () => _onReset(context),
+              // onPressed: () => _onReset(context),
               isLoading: isLoading,
               text: 'Reset',
               margin: const EdgeInsets.only(top: 20.0),

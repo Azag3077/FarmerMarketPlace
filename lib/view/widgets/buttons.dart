@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'place_holders.dart';
+
 enum CustomButtonType {
   elevated,
   outlined,
@@ -13,30 +15,34 @@ class CustomButton extends StatelessWidget {
     this.margin = const EdgeInsets.only(bottom: 20),
     this.type = CustomButtonType.elevated,
     this.isLoading = false,
+    this.width = double.infinity,
     this.height = 48.0,
     this.backgroundColor,
+    this.foregroundColor,
   }) : super(key: key);
   final String text;
   final EdgeInsets? margin;
   final VoidCallback? onPressed;
   final CustomButtonType type;
   final bool isLoading;
+  final double width;
   final double height;
   final Color? backgroundColor;
+  final Color? foregroundColor;
 
   ButtonStyle _style(BuildContext context) {
     switch (type) {
       case CustomButtonType.elevated:
         return ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
-          foregroundColor: Colors.white,
+          foregroundColor: foregroundColor ?? Colors.white,
           elevation: 0,
           disabledBackgroundColor:
               Theme.of(context).primaryColor.withOpacity(.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.0),
           ),
-          minimumSize: Size(double.infinity, height),
+          minimumSize: Size(width, height),
         );
       case CustomButtonType.outlined:
         return OutlinedButton.styleFrom(
@@ -48,7 +54,7 @@ class CustomButton extends StatelessWidget {
             color: Theme.of(context).primaryColor,
           ),
           elevation: 0,
-          minimumSize: Size(double.infinity, height),
+          minimumSize: Size(width, height),
         );
     }
   }
@@ -136,6 +142,52 @@ class CardButton extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class CategoryContainerButton extends StatelessWidget {
+  const CategoryContainerButton({
+    Key? key,
+    required this.onPressed,
+    required this.image,
+    required this.text,
+    this.textStyle,
+  }) : super(key: key);
+  final VoidCallback onPressed;
+  final String image;
+  final String text;
+  final TextStyle? textStyle;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialButton(
+      minWidth: 0,
+      elevation: 0,
+      onPressed: onPressed,
+      padding: const EdgeInsets.all(6.0),
+      color: Theme.of(context).primaryColor.withOpacity(.12),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12.0),
+      ),
+      child: Column(
+        children: <Widget>[
+          Expanded(
+            child: ImageLoader(
+              imageUrl: image,
+              decoration: const BoxDecoration(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(2.0),
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              style: textStyle ?? const TextStyle(fontSize: 11.0),
+            ),
+          ),
+        ],
       ),
     );
   }

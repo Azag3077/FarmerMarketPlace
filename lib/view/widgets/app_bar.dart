@@ -72,7 +72,7 @@ class CartButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final carts = ref.watch(cartsProvider);
+    final cart = ref.watch(cartStateProvider);
 
     return Stack(
       children: <Widget>[
@@ -92,30 +92,31 @@ class CartButton extends ConsumerWidget {
             ),
           ),
         ),
-        Positioned(
-          top: 3.0,
-          right: 6.0,
-          child: Container(
-            padding: const EdgeInsets.all(2.0),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(8.0),
-            ),
-            constraints: const BoxConstraints(
-              minWidth: 16.0,
-              minHeight: 16.0,
-            ),
-            child: Center(
-              child: Text(
-                carts.length.toString(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.0,
+        if (cart != null)
+          Positioned(
+            top: 3.0,
+            right: 6.0,
+            child: Container(
+              padding: const EdgeInsets.all(2.0),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              constraints: const BoxConstraints(
+                minWidth: 16.0,
+                minHeight: 16.0,
+              ),
+              child: Center(
+                child: Text(
+                  cart.length.toString(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12.0,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
       ],
     );
   }

@@ -1,6 +1,10 @@
+import 'dart:developer';
+
+import 'package:farmers_marketplace/view/pages/auth_pages/reset_password_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../controller.dart';
 import '../../../core/api_handler/service.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/utils/validators.dart';
@@ -49,26 +53,29 @@ class _ForgotPasswordState extends ConsumerState<ForgotPassword> {
     // UNBLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => false);
 
+    log(response.status.toString());
+
     switch (response.status) {
       case ResponseStatus.pending:
         return;
       case ResponseStatus.success:
-        return _onSuccessful(response.data!);
+        return _onSuccessful();
       case ResponseStatus.failed:
         return _onFailed(response.message!);
       case ResponseStatus.connectionError:
-        return _onConnectionError();
+        return controller.onConnectionError(context);
       case ResponseStatus.unknownError:
-        return _onUnknownError();
+        return controller.onUnknownError(context);
     }
   }
 
-  void _onSuccessful(Map<String, dynamic> data) {}
+  void _onSuccessful() =>
+      pushTo(context, ResetPasswordPage(_emailController.text));
 
   void _onFailed(String message) {
     late final String title;
     if (message == 'User not found') {
-      title = 'Incorrect credentials';
+      title = 'Incorrect email';
       message = 'The specified email was not found on our database. '
           'Please confirm the email and try again';
     } else {
@@ -78,30 +85,6 @@ class _ForgotPasswordState extends ConsumerState<ForgotPassword> {
     snackbar(
       context: context,
       title: title,
-      message: message,
-      contentType: ContentType.failure,
-    );
-  }
-
-  void _onConnectionError() {
-    const String message =
-        'A network connection problem interrupted the process. '
-        'Please check your network and try again';
-    snackbar(
-      context: context,
-      title: 'Network error',
-      message: message,
-      contentType: ContentType.failure,
-    );
-  }
-
-  void _onUnknownError() {
-    const String message =
-        'An unknown server error occurred, please try again. '
-        'If error persist, please report to the admin';
-    snackbar(
-      context: context,
-      title: 'Unknown server error',
       message: message,
       contentType: ContentType.failure,
     );

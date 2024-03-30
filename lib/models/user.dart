@@ -17,15 +17,15 @@ class User {
     required this.isVerified,
   });
 
-  factory User.fromJson(Map<String, dynamic> data) {
+  factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: data['id'],
-      firstname: data['firstname'],
-      lastname: data['lastname'],
-      email: data['email'],
-      phone: data['phone'],
-      pushToken: data['pushtoken'],
-      isVerified: data['is_verified'] == 1,
+      id: json['id'],
+      firstname: json['firstname'],
+      lastname: json['lastname'],
+      email: json['email'],
+      phone: json['phone'],
+      pushToken: json['pushtoken'],
+      isVerified: json['is_verified'] == 1,
     );
   }
 
@@ -46,15 +46,3 @@ class User {
     );
   }
 }
-
-// {
-//   id: 51,
-//   firstname: Agboola,
-//   lastname: Odunayo,
-//   password: $2b$10$Ao.AC91A9jTMREiU/iiTEuS68tprRfobb/1pnly4rpOwmrZh7X7y6,
-//   email: agboolaodunayo2016@gmail.com,
-//   phone: ,
-//   code: 645781,
-//   pushtoken: null,
-//   is_verified: 1,
-// }

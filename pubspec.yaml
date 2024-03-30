@@ -19,6 +19,11 @@ dependencies:
   cuberto_bottom_bar:
   http: ^1.1.0
   awesome_snackbar_content: ^0.1.3
+  shared_preferences: ^2.2.2
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  country_state_city: ^0.1.6
+  intl: ^0.18.1
 
 dev_dependencies:
   flutter_test:
@@ -34,7 +39,9 @@ flutter:
     - assets/images/
     - assets/images/auth_images/
     - assets/images/no_data/
+    - assets/loader/
     - assets/texts/
+    - assets/
 
   # example:
   # fonts:

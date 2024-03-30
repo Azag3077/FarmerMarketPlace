@@ -114,38 +114,27 @@ class CustomTextField extends StatelessWidget {
   }
 }
 
-class CustomAzag extends StatelessWidget {
-  const CustomAzag({
+class CustomChevronButton extends StatelessWidget {
+  const CustomChevronButton({
     super.key,
     required this.labelText,
     this.hintText,
     this.text,
+    this.errorText,
     this.required = true,
+    this.hasError = false,
     this.margin = const EdgeInsets.only(bottom: 20.0),
-    this.controller,
-    this.validator,
-    this.suffixIcon,
-    this.isValidated = false,
-    this.obscureText = false,
-    this.textInputAction = TextInputAction.next,
-    this.keyboardType = TextInputType.text,
-  }) : textCapitalization = obscureText
-            ? TextCapitalization.none
-            : TextCapitalization.sentences;
+    this.onPressed,
+  });
 
   final String labelText;
   final String? hintText;
   final String? text;
+  final String? errorText;
+  final bool hasError;
   final bool required;
   final EdgeInsets? margin;
-  final TextEditingController? controller;
-  final FormFieldValidator<String>? validator;
-  final bool isValidated;
-  final bool obscureText;
-  final Widget? suffixIcon;
-  final TextInputAction? textInputAction;
-  final TextInputType? keyboardType;
-  final TextCapitalization textCapitalization;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -162,14 +151,16 @@ class CustomAzag extends StatelessWidget {
             ),
           ),
           MaterialButton(
-            onPressed: () {},
+            onPressed: onPressed,
             elevation: 0,
             color: Colors.grey.shade200,
             padding: const EdgeInsets.all(14.0),
             shape: OutlineInputBorder(
               borderRadius: BorderRadius.circular(15.0),
-              borderSide: const BorderSide(
-                color: Colors.transparent,
+              borderSide: BorderSide(
+                color: hasError
+                    ? Theme.of(context).colorScheme.error
+                    : Colors.transparent,
                 width: 1.2,
               ),
             ),
@@ -185,6 +176,17 @@ class CustomAzag extends StatelessWidget {
               ],
             ),
           ),
+          if (hasError && errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 15.0, top: 8.0),
+              child: Text(
+                errorText!,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall!
+                    .copyWith(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
         ],
       ),
     );
@@ -202,6 +204,9 @@ class CustomSearchbar extends StatelessWidget {
     this.suffixIcon,
     this.controller,
     this.onTap,
+    this.canRequestFocus = true,
+    this.autofocus = false,
+    this.onChanged,
   }) : super(key: key);
   final String? hintText;
   final String? labelText;
@@ -211,6 +216,9 @@ class CustomSearchbar extends StatelessWidget {
   final Widget? suffixIcon;
   final TextEditingController? controller;
   final VoidCallback? onTap;
+  final bool canRequestFocus;
+  final bool autofocus;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -218,9 +226,12 @@ class CustomSearchbar extends StatelessWidget {
       margin: margin,
       child: TextField(
         onTap: onTap,
+        autofocus: autofocus,
         controller: controller,
+        onChanged: onChanged,
         cursorColor: Theme.of(context).primaryColor,
         onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
+        canRequestFocus: canRequestFocus,
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
           border: OutlineInputBorder(

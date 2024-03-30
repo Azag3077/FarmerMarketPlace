@@ -1,26 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/constants/assets.dart';
+import '../../core/constants/storage.dart';
 import '../../router/route.dart';
 import 'auth_pages/welcome_page.dart';
+import 'navigation_pages/main_page.dart';
 
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   void initState() {
     _navigateToNextPage();
     super.initState();
   }
 
-  Future<void> _navigateToNextPage() async =>
-      Future.delayed(const Duration(seconds: 2))
-          .then((_) => pushReplacementTo(context, const WelcomePage()));
+  Future<void> _navigateToNextPage() async {
+    final prefs = await SharedPreferences.getInstance();
+    // await prefs.remove(StorageKey.userId);
+    final int? userId = prefs.getInt(StorageKey.userId);
+
+    Future.delayed(const Duration(seconds: 2)).then((_) {
+      if (userId == null) {
+        pushReplacementTo(context, const WelcomePage());
+      } else {
+        pushReplacementTo(context, const NavigationPage());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

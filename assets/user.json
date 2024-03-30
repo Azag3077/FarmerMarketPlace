@@ -1,0 +1,15 @@
+{
+  "data": [
+    {
+      "id": 78,
+      "firstname": "Azag",
+      "lastname": "Odun",
+      "password": "$2b$10$ZgXd1sV.CIPUdi162ypRvOfQyt9bGNCj4y9uB0OH.kmdq6QSNO9Ay",
+      "email": "agboolaodunayo2016@gmail.com",
+      "phone": "",
+      "code": "175926",
+      "pushtoken": null,
+      "is_verified": 1
+    }
+  ]
+}

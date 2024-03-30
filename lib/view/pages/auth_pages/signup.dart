@@ -7,8 +7,6 @@ import '../../../controller.dart';
 import '../../../core/api_handler/service.dart';
 import '../../../core/constants/assets.dart';
 import '../../../core/utils/validators.dart';
-import '../../../models/user.dart';
-import '../../../providers.dart';
 import '../../../utils.dart';
 import '../../widgets/app_bar.dart';
 import '../../widgets/buttons.dart';
@@ -75,17 +73,13 @@ class _SignupState extends ConsumerState<Signup> {
       case ResponseStatus.failed:
         return _onFailed(response.message!);
       case ResponseStatus.connectionError:
-        return _onConnectionError();
+        return controller.onConnectionError(context);
       case ResponseStatus.unknownError:
-        return _onUnknownError();
+        return controller.onUnknownError(context);
     }
   }
 
   void _onSuccessful(Map<String, dynamic> data) {
-    // [log] {status: SUCCESS, message: User created, data: {id: 68, firstname: Azag, lastname: Python, password: $2b$10$1qvchqOQNqihivHrQ28aPuIP/KgcLrI5Pm5ok66tcJ63S1nnh4AEO, email: agboolaodunayo2016@gmail.coms, phone: , code: null, pushtoken: null, is_verified: 0}}
-    final user = User.fromJson(data);
-    ref.read(userProvider.notifier).update((state) => user);
-
     requestOTP(_emailController.text).then((value) {
       if (value) pushTo(context, VerifyPage(_emailController.text));
     });
@@ -95,30 +89,6 @@ class _SignupState extends ConsumerState<Signup> {
     snackbar(
       context: context,
       title: 'Oops!!!',
-      message: message,
-      contentType: ContentType.failure,
-    );
-  }
-
-  void _onConnectionError() {
-    const String message =
-        'A network connection problem interrupted the process. '
-        'Please check your network and try again';
-    snackbar(
-      context: context,
-      title: 'Network error',
-      message: message,
-      contentType: ContentType.failure,
-    );
-  }
-
-  void _onUnknownError() {
-    const String message =
-        'An unknown server error occurred, please try again. '
-        'If error persist, please report to the admin';
-    snackbar(
-      context: context,
-      title: 'Unknown server error',
       message: message,
       contentType: ContentType.failure,
     );

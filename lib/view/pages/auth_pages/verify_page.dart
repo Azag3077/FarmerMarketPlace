@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../controller.dart';
 import '../../../core/api_handler/service.dart';
+import '../../../core/constants/storage.dart';
+import '../../../models/user.dart';
 import '../../../router/route.dart';
 import '../../../utils.dart';
 import '../../widgets/snackbar.dart';
@@ -72,11 +75,16 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
     // );
   }
 
-  void _onSuccessful(Map<String, dynamic> data) {
-    // final user = User.fromJson(data);
-    // ref.read(userProvider.notifier).update((state) => user);
+  Future<void> _onSuccessful(Map<String, dynamic> data) async {
+    final user = User.fromJson(data);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(StorageKey.userId, user.id);
+    _navigateToPage();
+  }
 
+  void _navigateToPage() {
     pushReplacementTo(context, const NavigationPage());
+
   }
 
   void _onFailed(String message) {

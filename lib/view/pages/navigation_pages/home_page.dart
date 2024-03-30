@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:farmers_marketplace/main.dart';
 import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,274 +7,419 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../controller.dart';
-import '../../../core/constants/assets.dart';
 import '../../widgets/app_bar.dart';
+import '../../widgets/buttons.dart';
 import '../../widgets/card.dart';
+import '../../widgets/error_widget.dart';
+import '../../widgets/place_holders.dart';
 import '../../widgets/text_fields.dart';
-import '../details_page.dart';
+import '../products_page.dart';
+import '../search_page.dart';
 
 class HomePage extends ConsumerWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({
+    Key? key,
+    required this.tabOnTap,
+  }) : super(key: key);
+  final ValueChanged<int> tabOnTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider)!;
-    final products = ref.watch(productsProvider);
-    final carts = ref.watch(cartsProvider);
+    final userFuture = ref.watch(userFutureProvider);
 
-    // final categories = ref.watch(categoriesProvider);
+    return userFuture.when(
+      data: (user) {
+        if (user == null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 150.0),
+            child: CustomErrorWidget(
+              onRetry: () {
+                ref.invalidate(userFutureProvider);
+              },
+            ),
+          );
+        }
+        final categoriesFuture = ref.watch(categoriesFutureProvider);
+        final topRatedProduct = ref.watch(topRatedProductsStateProvider);
+        final latestProducts = ref.watch(latestProductsStateProvider);
+        final orientation = MediaQuery.of(context).orientation;
+        final crossAxisCount = orientation == Orientation.landscape ? 4 : 2;
 
-    return Scaffold(
-      appBar: CustomAppBar(
-        leadingWidth: 0.0,
-        toolbarHeight: 72.0,
-        leading: const SizedBox.shrink(),
-        titleWidget: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              user.firstname,
-              style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                    color: Colors.blueGrey.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
-            ),
-            Text(
-              'Get the best farm produce right to you doorstep',
-              maxLines: 2,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            const CustomSearchbar(
-              margin: EdgeInsets.all(15),
-              prefixIcon: Icon(
-                CupertinoIcons.search,
-                color: Colors.grey,
-              ),
-              hintText: 'Search...',
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 15.0,
-                vertical: 5.0,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    'Categories',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    style: TextButton.styleFrom(
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 4.0,
-                      ),
-                      minimumSize: Size.zero,
-                    ),
-                    child: const Row(
-                      children: <Widget>[
-                        Text('See all'),
-                        Icon(Icons.arrow_right),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        return Scaffold(
+          appBar: CustomAppBar(
+            leadingWidth: 0.0,
+            toolbarHeight: 72.0,
+            leading: const SizedBox.shrink(),
+            titleWidget: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                CategoryContainerButton(
-                  onPressed: () {},
-                  image: AppImages.fruits,
-                  text: 'Soup & Ingredients',
+                Text(
+                  'Hi, ${user.firstname}',
+                  style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                        color: Colors.blueGrey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
                 ),
-                CategoryContainerButton(
-                  onPressed: () {},
-                  image: AppImages.broccoli,
-                  text: 'Grains',
-                ),
-                CategoryContainerButton(
-                  onPressed: () {},
-                  image: AppImages.broccoli,
-                  text: 'Foodstuffs',
-                ),
-                CategoryContainerButton(
-                  onPressed: () {},
-                  image: AppImages.broccoli,
-                  text: 'Fruits',
+                Text(
+                  'Get the best farm produce right to you doorstep',
+                  maxLines: 2,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
             ),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 15.0, top: 30.0, bottom: 5.0),
-              child: Text(
-                'Top Rated Products',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            SizedBox(
-              height: 250,
-              child: ListView.separated(
-                itemCount: products.length,
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 15.0,
-                  vertical: 6.0,
+          ),
+          body: Column(
+            children: <Widget>[
+              CustomSearchbar(
+                onTap: () => pushTo(context, const SearchPage()),
+                canRequestFocus: false,
+                margin: const EdgeInsets.all(15),
+                prefixIcon: const Icon(
+                  CupertinoIcons.search,
+                  color: Colors.grey,
                 ),
-                separatorBuilder: (_, __) => const SizedBox(width: 15.0),
-                itemBuilder: (BuildContext context, int index) {
-                  final product = products.elementAt(index);
-                  final heroTag = '${product.image}$index';
-                  final cartIds = carts.where((p) => p.id == product.id);
-                  final count = cartIds.isEmpty ? 0 : cartIds.first.cartCount;
+                hintText: 'Search...',
+              ),
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(productsFutureProvider);
+                    await Future.delayed(const Duration(seconds: 2));
+                  },
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 15.0,
+                            vertical: 5.0,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Text(
+                                'Categories',
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              TextButton(
+                                onPressed: () => tabOnTap(1),
+                                style: TextButton.styleFrom(
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10.0,
+                                    vertical: 4.0,
+                                  ),
+                                  minimumSize: Size.zero,
+                                ),
+                                child: const Row(
+                                  children: <Widget>[
+                                    Text('See all'),
+                                    Icon(Icons.arrow_right),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        categoriesFuture.when(
+                          data: (categories) {
+                            return GridView(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15.0),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 4,
+                                crossAxisSpacing: 10.0,
+                              ),
+                              children: categories
+                                  .sublist(0, min(4, categories.length))
+                                  .map((category) {
+                                return CategoryContainerButton(
+                                  onPressed: () {
+                                    ref
+                                        .read(selectedCategory.notifier)
+                                        .update((_) => category);
+                                    pushTo(context, ProductPage(category));
+                                  },
+                                  image: category.image,
+                                  text: category.name,
+                                );
+                              }).toList(),
+                            );
+                          },
+                          error: (_, __) => const Text(
+                              'An error occurred, please swipe to refresh'),
+                          loading: () {
+                            return const CategoryLoadingWidget(
+                              padding: EdgeInsets.symmetric(horizontal: 15.0),
+                            );
+                          },
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 15.0,
+                            top: 30.0,
+                            bottom: 5.0,
+                          ),
+                          child: Text(
+                            'Top Rated Products',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (topRatedProduct == null)
+                          const ProductGridLoading(
+                            count: 2,
+                          )
+                        else
+                          SizedBox(
+                            height: 260.0,
+                            child: ListView.separated(
+                              itemCount: min(10, topRatedProduct.length),
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 15.0,
+                                vertical: 6.0,
+                              ),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 15.0),
+                              itemBuilder: (BuildContext context, int index) {
+                                final product =
+                                    topRatedProduct.elementAt(index);
+                                final heroTag =
+                                    '${product.image}-TopRated-$index';
 
-                  return ProductCard(
-                    onPressed: () => pushTo(context,
-                        DetailsPage(product: product, heroTag: heroTag)),
-                    onIncrement: () =>
-                        onCartIncrement(context, ref, product.id, true),
-                    onDecrement: () =>
-                        onCartIncrement(context, ref, product.id, false),
-                    heroTag: '${product.image}$index',
-                    image: product.image,
-                    name: product.name,
-                    price: product.price,
-                    rating: product.rating,
-                    count: count,
-                  );
-                },
-              ),
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 15.0, top: 30.0, bottom: 5.0),
-              child: Text(
-                'Latest Products',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            GridView.builder(
-              shrinkWrap: true,
-              itemCount: 5,
-              padding: const EdgeInsets.all(15.0),
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 8.0,
-                crossAxisSpacing: 8.0,
-              ),
-              itemBuilder: (BuildContext context, int index) {
-                return Container(
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(12.0),
+                                return ProductCard(
+                                  width: 150,
+                                  onPressed: () =>
+                                      controller.gotToProductDetailsPage(
+                                          context, ref, product, heroTag),
+                                  onIncrement: () => onCartIncrement(
+                                      context, ref, product, true),
+                                  onDecrement: () => onCartIncrement(
+                                      context, ref, product, false),
+                                  heroTag: '${product.image}$index',
+                                  image: product.image,
+                                  name: product.name,
+                                  price: product.price,
+                                  rating: product.rating,
+                                  count: product.cartCount,
+                                  weight: product.weight,
+                                  unit: product.unit,
+                                );
+                              },
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.only(
+                              left: 15.0, top: 30.0, bottom: 5.0),
+                          child: Text(
+                            'Latest Products',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        if (latestProducts == null)
+                          ProductGridLoading(
+                            count: crossAxisCount,
+                          )
+                        else
+                          GridView.builder(
+                            shrinkWrap: true,
+                            itemCount: latestProducts.length,
+                            physics: const NeverScrollableScrollPhysics(),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 15.0),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              mainAxisSpacing: 12.0,
+                              crossAxisSpacing: 12.0,
+                              mainAxisExtent: 250.0,
+                            ),
+                            itemBuilder: (BuildContext context, int index) {
+                              final product = latestProducts.elementAt(index);
+                              final heroTag = '${product.image}-Latest-$index';
+
+                              return ProductCard(
+                                onPressed: () =>
+                                    controller.gotToProductDetailsPage(
+                                        context, ref, product, heroTag),
+                                onIncrement: () => onCartIncrement(
+                                    context, ref, product, true),
+                                onDecrement: () => onCartIncrement(
+                                    context, ref, product, false),
+                                heroTag: heroTag,
+                                image: product.image,
+                                name: product.name,
+                                price: product.price,
+                                rating: product.rating,
+                                count: product.cartCount,
+                                weight: product.weight,
+                                unit: product.unit,
+                              );
+                            },
+                          ),
+                      ],
+                    ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Image.asset(
-                        AppImages.fruits,
-                        color: Colors.green,
-                        fit: BoxFit.fitHeight,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      error: (_, __) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 150.0),
+          child: CustomErrorWidget(
+            onRetry: () {
+              ref.invalidate(userFutureProvider);
+            },
+          ),
+        );
+      },
+      loading: () {
+        return Scaffold(
+          appBar: AppBar(
+            toolbarHeight: 0.0,
+          ),
+          body: const Padding(
+            padding: EdgeInsets.all(15.0),
+            child: Column(
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    DataLoader(
+                      width: 60.0,
+                      height: 60.0,
+                      radius: 30.0,
+                    ),
+                    SizedBox(width: 10.0),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          DataLoader(
+                            width: 50.0,
+                            height: 10.0,
+                          ),
+                          SizedBox(height: 10.0),
+                          DataLoader(
+                            height: 15.0,
+                            margin: EdgeInsets.only(right: 50.0),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                SizedBox(height: 20.0),
+                DataLoader(
+                  height: 120.0,
+                  width: double.infinity,
+                ),
+                SizedBox(
+                  height: 110,
+                  child: CategoryLoadingWidget(
+                    padding: EdgeInsets.symmetric(vertical: 15.0),
                   ),
-                );
-              },
-            ),
-            Padding(
-              padding:
-                  const EdgeInsets.only(left: 15.0, top: 30.0, bottom: 5.0),
-              child: Text(
-                'Trending Products',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            GridView.builder(
-              shrinkWrap: true,
-              itemCount: 5,
-              padding: const EdgeInsets.all(15.0),
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 8.0,
-                crossAxisSpacing: 8.0,
-              ),
-              itemBuilder: (BuildContext context, int index) {
-                return Container(
-                  clipBehavior: Clip.hardEdge,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(12.0),
+                ),
+                Expanded(
+                  child: ProductGridLoading(
+                    count: 4,
+                    padding: EdgeInsets.zero,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Image.asset(
-                        AppImages.fruits,
-                        color: Colors.green,
-                        fit: BoxFit.fitHeight,
-                      ),
-                    ],
-                  ),
-                );
-              },
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
 
-class CategoryContainerButton extends StatelessWidget {
-  const CategoryContainerButton({
-    Key? key,
-    required this.onPressed,
-    required this.image,
-    required this.text,
-  }) : super(key: key);
-  final VoidCallback onPressed;
-  final String image;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialButton(
-      minWidth: 0,
-      elevation: 0,
-      onPressed: onPressed,
-      padding: const EdgeInsets.all(6.0),
-      color: Theme.of(context).primaryColor.withOpacity(.12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
-      ),
-      child: SizedBox.square(
-        dimension: 60.0,
-        child: Column(
-          children: <Widget>[
-            Expanded(child: Image.asset(image, width: 40.0)),
-            Text(
-              text,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11.0),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class PaginatedListView extends StatefulWidget {
+//   @override
+//   _PaginatedListViewState createState() => _PaginatedListViewState();
+// }
+//
+// class _PaginatedListViewState extends State<PaginatedListView> {
+//   List<String> data = [];
+//   int pageSize = 15;
+//   int currentPage = 0;
+//   bool isLoading = false;
+//   ScrollController _scrollController = ScrollController();
+//
+//   @override
+//   void initState() {
+//     super.initState();
+//     _scrollController.addListener(_scrollListener);
+//     fetchData();
+//   }
+//
+//   @override
+//   void dispose() {
+//     _scrollController.removeListener(_scrollListener);
+//     _scrollController.dispose();
+//     super.dispose();
+//   }
+//
+//   void _scrollListener() {
+//     if (_scrollController.position.pixels ==
+//         _scrollController.position.maxScrollExtent) {
+//       fetchData();
+//     }
+//   }
+//
+//   Future<void> fetchData() async {
+//     if (!isLoading) {
+//       setState(() {
+//         isLoading = true;
+//       });
+//
+//       // Simulate fetching data from an external source (e.g., API)
+//       // Replace this with your actual data fetching logic
+//       await Future.delayed(
+//           const Duration(seconds: 2)); // Simulate loading delay
+//       List<String> newData =
+//           List.generate(pageSize, (index) => 'Item ${data.length + index}');
+//
+//       setState(() {
+//         data.addAll(newData);
+//         isLoading = false;
+//       });
+//     }
+//   }
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Paginated List View')),
+//       body: ListView.builder(
+//         controller: _scrollController,
+//         itemCount: data.length + (isLoading ? 1 : 0),
+//         itemBuilder: (context, index) {
+//           if (index < data.length) {
+//             return ListTile(
+//               title: Text(data[index]),
+//             );
+//           } else {
+//             // Loading indicator at the end of the list
+//             return const Padding(
+//               padding: EdgeInsets.all(8.0),
+//               child: Center(child: CircularProgressIndicator()),
+//             );
+//           }
+//         },
+//       ),
+//     );
+//   }
+// }
+//
+// void main() {
+//   runApp(MaterialApp(home: PaginatedListView()));
+// }

@@ -29,10 +29,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   void initState() {
-    final user = ref.read(userProvider)!;
-    _firstnameController.text = user.firstname;
-    _lastnameController.text = user.lastname;
-    _emailController.text = user.email;
+    final user = ref.read(userFutureProvider).value;
+    _firstnameController.text = user?.firstname ?? '';
+    _lastnameController.text = user?.lastname ?? '';
+    _emailController.text = user?.email ?? '';
 
     _firstnameController.addListener(_hasChanged);
     _lastnameController.addListener(_hasChanged);
@@ -49,6 +49,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   Future<void> _onSave(BuildContext context) async {
+    final user = ref.read(userFutureProvider).value;
+
+    if (user == null) return;
+
     ref.read(_isValidatedProvider.notifier).update((state) => true);
     if (!_formKey.currentState!.validate()) return;
 
@@ -57,12 +61,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     // BLOCK USER INTERACTION
     ref.read(_isLoadingProvider.notifier).update((state) => true);
 
-    final id = ref.read(userProvider)!.id;
     final firstname = _firstnameController.text;
     final lastname = _lastnameController.text;
     final email = _emailController.text;
     final response =
-        await apiService.editProfile(id, firstname, lastname, email);
+        await apiService.editProfile(user.id, firstname, lastname, email);
 
     if (!mounted) return; // USER EXIT PAGE
 
@@ -84,19 +87,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   void _onSuccessful() {
-    final firstname = _firstnameController.text.trim();
-    final lastname = _lastnameController.text.trim();
-    final email = _emailController.text.trim();
-    // final phone = _phoneController.text.trim();
-
-    ref.read(userProvider.notifier).update((user) {
-      return user!.copyWith(
-        firstname: firstname,
-        lastname: lastname,
-        email: email,
-        // phone: phone,
-      );
-    });
+    ref.invalidate(userFutureProvider);
     ref.read(_hasChangedProvider.notifier).update((state) => false);
 
     snackbar(
@@ -149,7 +140,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   void _hasChanged() {
-    final user = ref.read(userProvider)!;
+    final user = ref.read(userFutureProvider).value;
+
+    if (user == null) return;
+
     ref.watch(_hasChangedProvider.notifier).update((state) =>
         _firstnameController.text.trim() != user.firstname ||
         _lastnameController.text.trim() != user.lastname ||

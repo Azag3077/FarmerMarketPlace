@@ -2,7 +2,7 @@ class Response {
   final String? message;
   final String? statusMessage;
   final ResponseStatus status;
-  final Map<String, dynamic>? data;
+  final dynamic data;
 
   Response({
     this.message,
@@ -24,7 +24,7 @@ class Response {
     String? message,
     String? statusMessage,
     ResponseStatus? status,
-    Map<String, dynamic>? data,
+    dynamic data,
   }) {
     return Response(
       message: message ?? this.message,

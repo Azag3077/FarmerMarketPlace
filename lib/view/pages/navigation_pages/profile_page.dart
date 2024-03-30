@@ -2,11 +2,15 @@ import 'package:farmers_marketplace/core/extensions/string.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/constants/storage.dart';
 import '../../../providers.dart';
 import '../../../router/route.dart';
 import '../../widgets/app_bar.dart';
+import '../../widgets/dialogs.dart';
 import '../../widgets/list_tile.dart';
+import '../../widgets/place_holders.dart';
 import '../addresses_page.dart';
 import '../auth_pages/welcome_page.dart';
 import '../edit_profile.dart';
@@ -22,9 +26,17 @@ class ProfilePage extends ConsumerWidget {
   }) : super(key: key);
   final VoidCallback? leadingActionButton;
 
+  Future<void> _onLogout(BuildContext context) async {
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove(StorageKey.userId).then((value) {
+        return pushToAndClearStack(context, const WelcomePage());
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userProvider)!;
+    final userFuture = ref.watch(userFutureProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -56,16 +68,64 @@ class ProfilePage extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
-                                Text(
-                                  '${user.firstname.title}'
-                                  ' ${user.lastname.title}',
-                                  style:
-                                      Theme.of(context).textTheme.titleMedium,
-                                ),
-                                const SizedBox(height: 4.0),
-                                Text(
-                                  user.email,
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                userFuture.when(
+                                  data: (user) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          '${user!.firstname.title}'
+                                          ' ${user.lastname.title}',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium,
+                                        ),
+                                        const SizedBox(height: 4.0),
+                                        Text(
+                                          user.email,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium,
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                  error: (_, __) {
+                                    return Text(
+                                      'An error has occurred.\n$_',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall!
+                                          .copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .error,
+                                          ),
+                                    );
+                                  },
+                                  loading: () {
+                                    return const Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        DataLoader(
+                                          baseColor: Colors.white54,
+                                          highlightColor: Colors.white,
+                                          height: 12.0,
+                                          width: 150.0,
+                                          margin: EdgeInsets.only(bottom: 10.0),
+                                        ),
+                                        DataLoader(
+                                          baseColor: Colors.white54,
+                                          highlightColor: Colors.white,
+                                          height: 15.0,
+                                          margin: EdgeInsets.only(
+                                              right: 30.0, bottom: 5.0),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ],
                             ),
@@ -117,7 +177,17 @@ class ProfilePage extends ConsumerWidget {
             ),
           ),
           CustomListTile(
-            onTap: () => pushToAndClearStack(context, const WelcomePage()),
+            onTap: () => showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return ConfirmDialog(
+                  title: 'Logout',
+                  body: 'You sure you want to logout of your account?',
+                  actionLabel: 'Logout',
+                  onAction: () => _onLogout(context),
+                );
+              },
+            ),
             leadingIconData: Icons.logout_rounded,
             title: 'Logout',
           ),

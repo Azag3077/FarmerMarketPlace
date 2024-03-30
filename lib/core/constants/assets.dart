@@ -16,6 +16,8 @@ abstract class AppImages {
   static const String orders = '$_noData/no_orders.png';
   static const String product = '$_noData/no_product.png';
   static const String search = '$_noData/no_search.png';
+
+  static const String loader = 'assets/loader/loader.gif';
 }
 
 abstract class AppTexts {

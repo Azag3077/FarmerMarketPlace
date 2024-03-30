@@ -1,3 +1,4 @@
+import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cuberto_bottom_bar/cuberto_bottom_bar.dart';
@@ -9,14 +10,6 @@ import 'profile_page.dart';
 
 final _currentIndexProvider = StateProvider.autoDispose<int>((ref) => 0);
 
-LinearGradient getGradient(Color color) => LinearGradient(
-      colors: [
-        color.withOpacity(0.5),
-        color.withOpacity(0.1),
-      ],
-      stops: const [0.0, 0.7],
-    );
-
 class NavigationPage extends ConsumerStatefulWidget {
   const NavigationPage({Key? key}) : super(key: key);
 
@@ -26,6 +19,14 @@ class NavigationPage extends ConsumerStatefulWidget {
 
 class _NavigationPageState extends ConsumerState<NavigationPage> {
   final _pageController = PageController();
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(userFutureProvider);
+    });
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -58,7 +59,7 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
           controller: _pageController,
           physics: const NeverScrollableScrollPhysics(),
           children: <Widget>[
-            const HomePage(),
+            HomePage(tabOnTap: _onTap),
             CategoryPage(leadingActionButton: () => _onTap(0)),
             NotificationPage(leadingActionButton: () => _onTap(0)),
             ProfilePage(leadingActionButton: () => _onTap(0)),

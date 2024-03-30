@@ -45,6 +45,16 @@ class Validator {
     return null;
   }
 
+  static String? otpCode(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter the correct code';
+    }
+    if (value.trim().length != 6) {
+      return 'Incomplete code!';
+    }
+    return null;
+  }
+
   static String? validateAmount(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter an amount';
