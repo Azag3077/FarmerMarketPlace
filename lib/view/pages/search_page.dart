@@ -1,12 +1,9 @@
-import 'package:farmers_marketplace/main.dart';
-import 'package:farmers_marketplace/view/pages/details_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../controller.dart';
 import '../../core/constants/assets.dart';
-import '../../models/models.dart';
 import '../../providers.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/card.dart';
@@ -14,56 +11,11 @@ import '../widgets/text_fields.dart';
 
 final _searchProvider = StateProvider.autoDispose<String>((ref) => '');
 
-class SearchPage extends ConsumerStatefulWidget {
+class SearchPage extends ConsumerWidget {
   const SearchPage({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<SearchPage> createState() => _SearchPageState();
-}
-
-class _SearchPageState extends ConsumerState<SearchPage> {
-  final _scrollController = ScrollController();
-  final _data = <Product>[];
-  final _dataPerPage = 10;
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    _scrollController.addListener(_scrollListener);
-    _loadData();
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _scrollListener() {
-    if (_scrollController.position.pixels >
-        _scrollController.position.maxScrollExtent - 100) {
-      _loadData();
-    }
-  }
-
-  void _loadData() {
-    if (!_isLoading) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      List<String> newData = List.generate(
-          _dataPerPage, (index) => 'Item ${_data.length + index + 1}');
-      setState(() {
-        // _data.addAll(newData);
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final search = ref.watch(_searchProvider);
     final products = ref.watch(productsStateProvider);
     final sorted = products?.where(
@@ -116,10 +68,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   final heroTag = '${product.image}-SearchPage-$index';
                   return SearchProductCard(
                     onPressed: () => controller.gotToProductDetailsPage(
-                        context, ref, product, heroTag),
+                        context, ref, product.id, heroTag),
                     search: search,
                     imageUrl: product.image,
                     name: product.name,
+                    heroTag: heroTag,
                     rating: product.rating,
                     price: product.price,
                   );

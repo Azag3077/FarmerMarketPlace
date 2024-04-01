@@ -48,11 +48,14 @@ class _LoginState extends ConsumerState<Login> {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
 
     if (kDebugMode) {
-      // _emailController.text = 'agboolaodunayo2016@gmail.com';
-      // _passwordController.text = 'Azagpword!1';
-
-      // _emailController.text = 'larryani24@gmail.com';
-      // _passwordController.text = 'pyrokinetics';
+      if (_emailController.text.isEmpty) {
+        _emailController.text = 'agboolaodunayo2016@gmail.com';
+        // _emailController.text = 'larryani24@gmail.com';
+      }
+      if (_passwordController.text.isEmpty) {
+        _passwordController.text = 'Azagpword!1';
+        // _passwordController.text = 'pyrokinetics';
+      }
     }
     if (!_formKey.currentState!.validate()) return;
 
@@ -88,7 +91,7 @@ class _LoginState extends ConsumerState<Login> {
     final user = User.fromJson(data);
 
     if (user.isVerified) {
-      pushToAndClearStack(context, const NavigationPage());
+      controller.gotoHomePage(context, ref);
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(StorageKey.userId, user.id);

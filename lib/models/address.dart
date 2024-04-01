@@ -21,7 +21,6 @@ class Address {
   final bool isPrimary;
 
   factory Address.fromJson(Map<String, dynamic> json) {
-    print(json);
     return Address(
       id: json['id'],
       userId: json['user_id'],

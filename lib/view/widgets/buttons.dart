@@ -5,12 +5,14 @@ import 'place_holders.dart';
 enum CustomButtonType {
   elevated,
   outlined,
+  text,
 }
 
 class CustomButton extends StatelessWidget {
   const CustomButton({
     Key? key,
     required this.text,
+    this.icon,
     this.onPressed,
     this.margin = const EdgeInsets.only(bottom: 20),
     this.type = CustomButtonType.elevated,
@@ -21,6 +23,7 @@ class CustomButton extends StatelessWidget {
     this.foregroundColor,
   }) : super(key: key);
   final String text;
+  final Icon? icon;
   final EdgeInsets? margin;
   final VoidCallback? onPressed;
   final CustomButtonType type;
@@ -56,6 +59,13 @@ class CustomButton extends StatelessWidget {
           elevation: 0,
           minimumSize: Size(width, height),
         );
+      case CustomButtonType.text:
+        return TextButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          backgroundColor: backgroundColor ?? Colors.transparent,
+          foregroundColor: Theme.of(context).primaryColor,
+        );
     }
   }
 
@@ -74,7 +84,16 @@ class CustomButton extends StatelessWidget {
                   backgroundColor: Colors.white,
                 ),
               )
-            : Text(text),
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(text),
+                  if (icon != null) ...[
+                    const SizedBox(width: 4.0),
+                    icon!,
+                  ],
+                ],
+              ),
       ),
     );
   }

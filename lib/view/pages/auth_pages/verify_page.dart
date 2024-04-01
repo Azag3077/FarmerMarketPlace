@@ -83,8 +83,7 @@ class _VerifyPageState extends ConsumerState<VerifyPage> {
   }
 
   void _navigateToPage() {
-    pushReplacementTo(context, const NavigationPage());
-
+    controller.gotoHomePage(context, ref);
   }
 
   void _onFailed(String message) {

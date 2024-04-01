@@ -12,6 +12,8 @@ class ConfirmDialog extends StatelessWidget {
     this.cancelLabel = 'Cancel',
     this.iconData,
     this.actionColor,
+    this.cancelButtonBackgroundColor,
+    this.actionButtonBackgroundColor,
     this.onCancel,
     this.onAction,
   }) : super(key: key);
@@ -21,6 +23,8 @@ class ConfirmDialog extends StatelessWidget {
   final String cancelLabel;
   final IconData? iconData;
   final Color? actionColor;
+  final Color? cancelButtonBackgroundColor;
+  final Color? actionButtonBackgroundColor;
   final VoidCallback? onCancel;
   final VoidCallback? onAction;
 
@@ -32,7 +36,7 @@ class ConfirmDialog extends StatelessWidget {
           if (iconData != null) ...[
             Icon(
               iconData,
-              color: actionColor,
+              color: actionColor ?? Theme.of(context).primaryColor,
             ),
             const SizedBox(width: 8.0),
           ],
@@ -43,7 +47,6 @@ class ConfirmDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const SizedBox(height: 10.0),
           Text(body),
           const SizedBox(height: 30.0),
           Row(
@@ -53,6 +56,8 @@ class ConfirmDialog extends StatelessWidget {
                   onPressed: onCancel ?? () => pop(context),
                   text: cancelLabel,
                   height: 40.0,
+                  backgroundColor:
+                      cancelButtonBackgroundColor ?? Colors.grey.shade400,
                 ),
               ),
               const SizedBox(width: 10.0),
@@ -64,13 +69,15 @@ class ConfirmDialog extends StatelessWidget {
                   },
                   text: actionLabel,
                   height: 40.0,
-                  backgroundColor: Theme.of(context).colorScheme.error,
+                  backgroundColor: actionButtonBackgroundColor ??
+                      Theme.of(context).primaryColor,
                 ),
               ),
             ],
           ),
         ],
       ),
+      titlePadding: const EdgeInsets.all(16.0),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
     );
   }

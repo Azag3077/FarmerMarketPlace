@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 void dismissKeyboard() => FocusManager.instance.primaryFocus!.unfocus();
 
@@ -33,4 +34,10 @@ void sendWhatsAppMessage() async {
   } else {
     debugPrint('WhatsApp is not installed on this device.');
   }
+}
+
+String generateUniqueTransactionId() {
+  final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+  final String uuid = const Uuid().v4().toString();
+  return '$uuid-$timestamp';
 }

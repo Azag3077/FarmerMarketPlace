@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../controller.dart';
-import '../../models/models.dart';
 import '../../router/route.dart';
 import '../widgets/buttons.dart';
 import '../widgets/card.dart';
@@ -20,29 +19,49 @@ class DetailsPage extends ConsumerWidget {
   const DetailsPage({
     Key? key,
     required this.heroTag,
-    required this.product,
+    required this.prodId,
   }) : super(key: key);
   final String heroTag;
-  final Product product;
+  final int prodId;
 
   void _onLike(BuildContext context, WidgetRef ref) {
     final user = ref.read(userFutureProvider).value;
-    final product = ref.read(productProvider)!;
+
+    if (user == null) {
+      controller.showMustLoginDialog(
+        context,
+        'Sorry, you need to be logged in before you can like a product.',
+      );
+      return;
+    }
+
+    ref.read(isLikedProvider(prodId).notifier).update((isLiked) {
+      ref.read(likeCountProvider(prodId).notifier).update((count) {
+        return count + (!isLiked ? 1 : -1);
+      });
+      return !isLiked;
+    });
 
     apiService
-        .like(product.id, user!.id)
+        .like(prodId, user.id)
         .then((response) => _checkResponse(context, ref, response));
   }
 
   void _checkResponse(BuildContext context, WidgetRef ref, Response response) {
     if (response.status == ResponseStatus.success) {
-      snackbar(context: context, title: 'Success', message: response.message!);
+      controller.showToast(response.message!);
     } else {
+      ref.read(isLikedProvider(prodId).notifier).update((isLiked) {
+        ref.read(likeCountProvider(prodId).notifier).update((count) {
+          return count + (!isLiked ? 1 : -1);
+        });
+        return !isLiked;
+      });
       snackbar(
         context: context,
         title: 'Failed',
-        message: response.message!,
-        contentType: ContentType.warning,
+        message: response.message ?? 'Failed to perform request',
+        contentType: ContentType.failure,
       );
     }
   }
@@ -50,7 +69,9 @@ class DetailsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final relatedProductsFuture = ref.watch(relatedProductsFutureProvider);
-    // final product = ref.watch(productProvider)!;
+    final product = ref.watch(selectedProductProvider(prodId));
+    final isLiked = ref.watch(isLikedProvider(prodId));
+    final likeCount = ref.watch(likeCountProvider(prodId));
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -145,7 +166,7 @@ class DetailsPage extends ConsumerWidget {
                                           Expanded(
                                             child: Text(
                                               '${product.name}'
-                                              '${product.weight > 0 ? ' (${product.weight} ${product.unit})' : ''}',
+                                              '${product.weight > 0 ? ' (${product.weight}${product.unit})' : ''}',
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .titleMedium!,
@@ -206,7 +227,9 @@ class DetailsPage extends ConsumerWidget {
                                                   BorderRadius.circular(20.0),
                                             ),
                                             child: Text(
-                                                '${product.rating} people liked this product'),
+                                              '$likeCount ${likeCount > 1 ? 'people' : 'person'}'
+                                              ' liked this product',
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -251,7 +274,7 @@ class DetailsPage extends ConsumerWidget {
                                           final product =
                                               products.elementAt(index);
                                           final heroTag =
-                                              '${product.image}-DetailsPage-$index';
+                                              '${product.image}-DetailsPage(Related)-$index';
 
                                           return ProductCard(
                                             width: 150,
@@ -259,13 +282,13 @@ class DetailsPage extends ConsumerWidget {
                                                 .gotToProductDetailsPage(
                                                     context,
                                                     ref,
-                                                    product,
+                                                    product.id,
                                                     heroTag),
                                             onIncrement: () => onCartIncrement(
                                                 context, ref, product, true),
                                             onDecrement: () => onCartIncrement(
                                                 context, ref, product, false),
-                                            heroTag: '${product.image}$index',
+                                            heroTag: heroTag,
                                             image: product.image,
                                             name: product.name,
                                             price: product.price,
@@ -390,43 +413,11 @@ class DetailsPage extends ConsumerWidget {
                 Positioned(
                   left: 20.0,
                   child: LikeButton(
+                    isLiked: isLiked,
                     onPressed: () {
-                      // print(product);
-                      // _onLike(context, ref);
+                      _onLike(context, ref);
                     },
                   ),
-                  // child: Container(
-                  //   padding: const EdgeInsets.all(4.0),
-                  //   decoration: ShapeDecoration(
-                  //     shape: const CircleBorder(),
-                  //     color: Colors.white,
-                  //     shadows: <BoxShadow>[
-                  //       BoxShadow(
-                  //         color: Theme.of(context).primaryColor.withOpacity(.5),
-                  //         spreadRadius: -5.0,
-                  //         blurRadius: 10.0,
-                  //         offset: const Offset(0, 2),
-                  //       ),
-                  //     ],
-                  //   ),
-                  //   // child: IconButton(
-                  //   //   onPressed: () => _onLike(context, ref),
-                  //   //   style: IconButton.styleFrom(
-                  //   //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  //   //   ),
-                  //   //   icon: Icon(
-                  //   //     CupertinoIcons.suit_heart_fill,
-                  //   //     color: Colors.grey.shade400,
-                  //   //     // size: 32,
-                  //   //   ),
-                  //   // ),
-                  //   child: LikeButton(
-                  //     onPressed: () {
-                  //       // print(product);
-                  //       // _onLike(context, ref);
-                  //     },
-                  //   ),
-                  // ),
                 ),
               ],
             ),
@@ -440,8 +431,10 @@ class DetailsPage extends ConsumerWidget {
 class LikeButton extends StatefulWidget {
   const LikeButton({
     super.key,
+    required this.isLiked,
     required this.onPressed,
   });
+  final bool isLiked;
   final VoidCallback onPressed;
 
   @override
@@ -452,11 +445,11 @@ class LikeButtonDemoState extends State<LikeButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _animation;
-  late Color azag;
   bool _liked = false;
 
   @override
   void initState() {
+    _liked = widget.isLiked;
     super.initState();
     _animationController = AnimationController(
       vsync: this,
@@ -468,10 +461,6 @@ class LikeButtonDemoState extends State<LikeButton>
         curve: Curves.easeInOut,
       ),
     );
-    azag = ColorTween(
-      begin: _liked ? Colors.grey : Colors.red,
-      end: _liked ? Colors.red : Colors.grey,
-    ).animate(_animationController).value!;
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         _animationController.reverse();
@@ -519,8 +508,8 @@ class LikeButtonDemoState extends State<LikeButton>
               icon: Icon(
                 Icons.favorite,
                 color: ColorTween(
-                  begin: _liked ? Colors.grey : Colors.red,
-                  end: _liked ? Colors.red : Colors.grey,
+                  begin: widget.isLiked ? Colors.red : Colors.grey,
+                  end: widget.isLiked ? Colors.grey : Colors.red,
                 ).animate(_animationController).value!,
                 size: 32.0,
               ),

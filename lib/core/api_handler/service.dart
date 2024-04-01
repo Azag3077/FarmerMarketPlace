@@ -48,8 +48,6 @@ class ApiService {
       final responseData = jsonDecode(response.body);
       final result = Response.fromJson(responseData);
 
-      log(responseData.toString());
-
       if (result.statusMessage == _success || result.data != null) {
         return result.copyWith(status: ResponseStatus.success);
       }
@@ -240,14 +238,17 @@ class ApiService {
 
   Future<User?> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt(StorageKey.userId)!;
+    final userId = prefs.getInt(StorageKey.userId);
 
-    final url = Uri.parse('${ApiEndpoints.user}/$userId');
-    final response = await _getRequests(url);
+    if (userId != null) {
+      final url = Uri.parse('${ApiEndpoints.user}/$userId');
+      final response = await _getRequests(url);
 
-    if (response.status == ResponseStatus.success) {
-      return User.fromJson(response.data.first);
+      if (response.status == ResponseStatus.success) {
+        return User.fromJson(response.data.first);
+      }
     }
+
     return null;
   }
 
@@ -287,6 +288,16 @@ class ApiService {
   Future<Response> like(int prodId, int userId) async {
     final data = {'prod_id': prodId, 'user_id': userId};
     return await _postRequests(ApiEndpoints.like, data);
+  }
+
+  Future<Response> getProductLikeStatus(int userId, int prodId) async {
+    final url = Uri.parse('${ApiEndpoints.like}/$userId/$prodId');
+    return await _getRequests(url);
+  }
+
+  Future<Response> getProductLikeCount(int prodId) async {
+    final url = Uri.parse('${ApiEndpoints.like}/$prodId');
+    return await _getRequests(url);
   }
 
   Future<Response> addAddress(

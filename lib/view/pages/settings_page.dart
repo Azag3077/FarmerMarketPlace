@@ -1,9 +1,9 @@
+import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../azag.dart';
 import '../../controller.dart';
 import '../../core/api_handler/service.dart';
 import '../../core/constants/storage.dart';
@@ -20,40 +20,38 @@ final _isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({Key? key}) : super(key: key);
 
-  // void _onResetPassword(BuildContext context) {}
+  Future<void> _onDeleteAccount(BuildContext context, WidgetRef ref) async {
+    final user = ref.read(userFutureProvider).value;
 
-  // Future<void> _onDeleteAccount(BuildContext context, WidgetRef ref) async {
-  //   final user = ref.read(appDataProvider).user;
-  //
-  //   if (user == null) {
-  //     snackbar(
-  //       context: context,
-  //       title: 'Oops!!!',
-  //       contentType: ContentType.warning,
-  //       message: ''
-  //           'Something went wrong. Please check you connection and try again.',
-  //     );
-  //     return;
-  //   }
-  //   // BLOCK USER INTERACTION
-  //   ref.read(_isLoadingProvider.notifier).update((state) => true);
-  //
-  //   apiService.delete(user.id).then((response) {
-  //     ref.read(_isLoadingProvider.notifier).update((state) => false);
-  //     switch (response.status) {
-  //       case ResponseStatus.pending:
-  //         return;
-  //       case ResponseStatus.success:
-  //         return _onSuccessful(context);
-  //       case ResponseStatus.failed:
-  //         return _onFailed(context, response.message!);
-  //       case ResponseStatus.connectionError:
-  //         return controller.onConnectionError(context);
-  //       case ResponseStatus.unknownError:
-  //         return controller.onUnknownError(context);
-  //     }
-  //   });
-  // }
+    if (user == null) {
+      snackbar(
+        context: context,
+        title: 'Oops!!!',
+        contentType: ContentType.warning,
+        message: ''
+            'Something went wrong. Please check you connection and try again.',
+      );
+      return;
+    }
+    // BLOCK USER INTERACTION
+    ref.read(_isLoadingProvider.notifier).update((state) => true);
+
+    apiService.delete(user.id).then((response) {
+      ref.read(_isLoadingProvider.notifier).update((state) => false);
+      switch (response.status) {
+        case ResponseStatus.pending:
+          return;
+        case ResponseStatus.success:
+          return _onSuccessful(context);
+        case ResponseStatus.failed:
+          return _onFailed(context, response.message!);
+        case ResponseStatus.connectionError:
+          return controller.onConnectionError(context);
+        case ResponseStatus.unknownError:
+          return controller.onUnknownError(context);
+      }
+    });
+  }
 
   void _onSuccessful(BuildContext context) {
     SharedPreferences.getInstance().then((pref) {
@@ -102,7 +100,10 @@ class SettingsPage extends ConsumerWidget {
                   title: 'Delete Account',
                   body: 'This action cannot be undone',
                   actionLabel: 'Delete',
-                  // onAction: () => _onDeleteAccount(context, ref),
+                  iconData: CupertinoIcons.delete,
+                  actionColor: Colors.red,
+                  actionButtonBackgroundColor: Colors.red,
+                  onAction: () => _onDeleteAccount(context, ref),
                 );
               },
             ),

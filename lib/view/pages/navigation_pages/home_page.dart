@@ -26,10 +26,11 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final userFuture = ref.watch(userFutureProvider);
+    final isGuestUser = ref.watch(isGuestUserProvider);
 
     return userFuture.when(
       data: (user) {
-        if (user == null) {
+        if (user == null && !isGuestUser) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 150.0),
             child: CustomErrorWidget(
@@ -54,7 +55,7 @@ class HomePage extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 Text(
-                  'Hi, ${user.firstname}',
+                  'Hi, ${user?.firstname ?? 'Guest'}',
                   style: Theme.of(context).textTheme.titleLarge!.copyWith(
                         color: Colors.blueGrey.shade700,
                         fontWeight: FontWeight.w500,
@@ -190,18 +191,18 @@ class HomePage extends ConsumerWidget {
                                 final product =
                                     topRatedProduct.elementAt(index);
                                 final heroTag =
-                                    '${product.image}-TopRated-$index';
+                                    '${product.image}-HomePage(TopRated)-$index';
 
                                 return ProductCard(
                                   width: 150,
                                   onPressed: () =>
                                       controller.gotToProductDetailsPage(
-                                          context, ref, product, heroTag),
+                                          context, ref, product.id, heroTag),
                                   onIncrement: () => onCartIncrement(
                                       context, ref, product, true),
                                   onDecrement: () => onCartIncrement(
                                       context, ref, product, false),
-                                  heroTag: '${product.image}$index',
+                                  heroTag: heroTag,
                                   image: product.image,
                                   name: product.name,
                                   price: product.price,
@@ -241,12 +242,13 @@ class HomePage extends ConsumerWidget {
                             ),
                             itemBuilder: (BuildContext context, int index) {
                               final product = latestProducts.elementAt(index);
-                              final heroTag = '${product.image}-Latest-$index';
+                              final heroTag =
+                                  '${product.image}-HomePage(Latest)-$index';
 
                               return ProductCard(
                                 onPressed: () =>
                                     controller.gotToProductDetailsPage(
-                                        context, ref, product, heroTag),
+                                        context, ref, product.id, heroTag),
                                 onIncrement: () => onCartIncrement(
                                     context, ref, product, true),
                                 onDecrement: () => onCartIncrement(
@@ -341,85 +343,3 @@ class HomePage extends ConsumerWidget {
     );
   }
 }
-
-// class PaginatedListView extends StatefulWidget {
-//   @override
-//   _PaginatedListViewState createState() => _PaginatedListViewState();
-// }
-//
-// class _PaginatedListViewState extends State<PaginatedListView> {
-//   List<String> data = [];
-//   int pageSize = 15;
-//   int currentPage = 0;
-//   bool isLoading = false;
-//   ScrollController _scrollController = ScrollController();
-//
-//   @override
-//   void initState() {
-//     super.initState();
-//     _scrollController.addListener(_scrollListener);
-//     fetchData();
-//   }
-//
-//   @override
-//   void dispose() {
-//     _scrollController.removeListener(_scrollListener);
-//     _scrollController.dispose();
-//     super.dispose();
-//   }
-//
-//   void _scrollListener() {
-//     if (_scrollController.position.pixels ==
-//         _scrollController.position.maxScrollExtent) {
-//       fetchData();
-//     }
-//   }
-//
-//   Future<void> fetchData() async {
-//     if (!isLoading) {
-//       setState(() {
-//         isLoading = true;
-//       });
-//
-//       // Simulate fetching data from an external source (e.g., API)
-//       // Replace this with your actual data fetching logic
-//       await Future.delayed(
-//           const Duration(seconds: 2)); // Simulate loading delay
-//       List<String> newData =
-//           List.generate(pageSize, (index) => 'Item ${data.length + index}');
-//
-//       setState(() {
-//         data.addAll(newData);
-//         isLoading = false;
-//       });
-//     }
-//   }
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('Paginated List View')),
-//       body: ListView.builder(
-//         controller: _scrollController,
-//         itemCount: data.length + (isLoading ? 1 : 0),
-//         itemBuilder: (context, index) {
-//           if (index < data.length) {
-//             return ListTile(
-//               title: Text(data[index]),
-//             );
-//           } else {
-//             // Loading indicator at the end of the list
-//             return const Padding(
-//               padding: EdgeInsets.all(8.0),
-//               child: Center(child: CircularProgressIndicator()),
-//             );
-//           }
-//         },
-//       ),
-//     );
-//   }
-// }
-//
-// void main() {
-//   runApp(MaterialApp(home: PaginatedListView()));
-// }

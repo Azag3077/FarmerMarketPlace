@@ -163,6 +163,7 @@ class CartProductCard extends StatelessWidget {
     Key? key,
     required this.imageUrl,
     required this.name,
+    required this.heroTag,
     required this.weight,
     required this.unit,
     required this.price,
@@ -174,6 +175,7 @@ class CartProductCard extends StatelessWidget {
   }) : super(key: key);
   final String imageUrl;
   final String name;
+  final String heroTag;
   final double weight;
   final String unit;
   final double price;
@@ -188,20 +190,21 @@ class CartProductCard extends StatelessWidget {
     return MaterialButton(
       onPressed: onPressed,
       padding: const EdgeInsets.all(4.0),
-      color: Colors.grey.shade200,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.0),
       ),
-      height: 120.0,
       child: Row(
         children: <Widget>[
-          ImageLoader(
-            imageUrl: imageUrl,
-            width: 100.0,
-            height: 100.0,
-            // decoration: const BoxDecoration(),
+          Hero(
+            tag: heroTag,
+            child: ImageLoader(
+              imageUrl: imageUrl,
+              width: 100.0,
+              height: 100.0,
+            ),
           ),
-          const SizedBox(width: 10.0),
+          const SizedBox(width: 8.0),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,14 +218,15 @@ class CartProductCard extends StatelessWidget {
                         children: <Widget>[
                           Text(
                             name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 4.0),
+                          const SizedBox(height: 2.0),
                           Text(
                             'Weight: $weight $unit',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall!
+                                .copyWith(color: Colors.blueGrey),
                           ),
                         ],
                       ),
@@ -236,7 +240,7 @@ class CartProductCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                // const Spacer(),
+                const SizedBox(height: 8.0),
                 Row(
                   children: <Widget>[
                     Expanded(
@@ -294,6 +298,7 @@ class SearchProductCard extends StatelessWidget {
     required this.onPressed,
     required this.imageUrl,
     required this.name,
+    required this.heroTag,
     required this.search,
     required this.rating,
     required this.price,
@@ -301,6 +306,7 @@ class SearchProductCard extends StatelessWidget {
   final VoidCallback onPressed;
   final String imageUrl;
   final String name;
+  final String heroTag;
   final String search;
   final int rating;
   final double price;
@@ -343,10 +349,13 @@ class SearchProductCard extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          ImageLoader(
-            imageUrl: imageUrl,
-            width: 100.0,
-            height: 100.0,
+          Hero(
+            tag: heroTag,
+            child: ImageLoader(
+              imageUrl: imageUrl,
+              width: 100.0,
+              height: 100.0,
+            ),
           ),
           const SizedBox(width: 4.0),
           Expanded(

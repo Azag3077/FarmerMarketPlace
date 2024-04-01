@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/models.dart';
 
+final isGuestUserProvider = StateProvider<bool>((ref) => true);
+
 final userFutureProvider = FutureProvider<User?>((ref) async {
+  if (ref.read(isGuestUserProvider)) return null;
   return apiService.getUser();
 });
 
@@ -27,28 +30,48 @@ final selectedCategory = StateProvider<Category?>((ref) => null);
 
 final productsFutureProvider = FutureProvider<List<Product>>((ref) async {
   final user = ref.read(userFutureProvider).value;
-  if (user == null) return List.empty();
-  // final cart = ref.watch(cartFutureProvider).value;
-  // final cartIds = (cart ?? []).map((c) => c.prodId);
-  final products = await apiService.productsFuture(user.id);
+  final products = await apiService.productsFuture(user?.id ?? -1);
 
   return products;
-
-  // return products.map((product) {
-  //   if (cartIds.contains(product.id)) {
-  //     final cProduct = cart!.singleWhere((c) => c.prodId == product.id);
-  //     return product.copyWith(cartCount: cProduct.qty);
-  //   } else {
-  //     return product;
-  //   }
-  // }).toList();
 });
 
 final productsStateProvider = StateProvider<List<Product>?>((ref) {
   return ref.watch(productsFutureProvider).value;
 });
 
-final productProvider = StateProvider<Product?>((ref) => null);
+final selectedProductProvider =
+    StateProvider.family<Product, int>((ref, prodId) {
+  return ref.watch(productsStateProvider)!.singleWhere((p) => prodId == p.id);
+});
+
+final isLikedFutureProvider =
+    FutureProvider.family<bool, int>((ref, prodId) async {
+  final user = ref.read(userFutureProvider).value;
+
+  if (user == null) return false;
+
+  final response = await apiService.getProductLikeStatus(user.id, prodId);
+
+  if (response.status == ResponseStatus.success) return response.data;
+
+  return false;
+});
+
+final isLikedProvider = StateProvider.family<bool, int>((ref, prodId) {
+  return ref.watch(isLikedFutureProvider(prodId)).value ?? false;
+});
+
+final likeCountFutureProvider =
+    FutureProvider.family<int, int>((ref, prodId) async {
+  final response = await apiService.getProductLikeCount(prodId);
+
+  if (response.status == ResponseStatus.success) return response.data;
+
+  return 0;
+});
+
+final likeCountProvider = StateProvider.family<int, int>(
+    (ref, prodId) => ref.watch(likeCountFutureProvider(prodId)).value ?? 0);
 
 final topRatedProductsStateProvider = StateProvider<List<Product>?>((ref) {
   final products = ref.watch(productsStateProvider);
@@ -81,7 +104,7 @@ final categoryProductsProvider =
 
 final relatedProductsFutureProvider =
     FutureProvider<List<Product>>((ref) async {
-  final user = ref.watch(userFutureProvider).value!;
+  final user = ref.watch(userFutureProvider).value;
 
   final category = ref.watch(selectedCategory);
   final categories = ref.watch(categoriesFutureProvider).value ?? [];
@@ -90,7 +113,7 @@ final relatedProductsFutureProvider =
     return List.empty();
   }
   final cat = category ?? categories.first;
-  final response = await apiService.relatedProducts(cat.id, user.id);
+  final response = await apiService.relatedProducts(cat.id, user?.id ?? -1);
 
   if (response.status == ResponseStatus.success) {
     return response.data
@@ -118,18 +141,26 @@ final addressesFutureProvider = FutureProvider<List<Address>?>((ref) {
   return apiService.addressesFuture(user.id);
 });
 
-final shippingFeeProvider = FutureProvider<double?>((ref) async {
+final primaryAddressProvider = StateProvider<Address?>((ref) {
   final addresses = ref.watch(addressesFutureProvider).value;
   final primaryAddress = addresses?.where((address) => address.isPrimary);
 
   if (primaryAddress != null && primaryAddress.isNotEmpty) {
-    final address = primaryAddress.first;
+    return primaryAddress.first;
+  }
+  return null;
+});
+
+final shippingFeeProvider = FutureProvider<double?>((ref) async {
+  final primaryAddress = ref.watch(primaryAddressProvider);
+
+  if (primaryAddress != null) {
     late final Response response;
 
-    if (address.state == 'Lagos') {
-      response = await apiService.lagosCityShippingFee(address.city);
+    if (primaryAddress.state == 'Lagos') {
+      response = await apiService.lagosCityShippingFee(primaryAddress.city);
     } else {
-      response = await apiService.stateShippingFee(address.state);
+      response = await apiService.stateShippingFee(primaryAddress.state);
     }
 
     if (response.status == ResponseStatus.success) {

@@ -56,7 +56,7 @@ class ProductPage extends ConsumerWidget {
               child: categoryProducts.isNotEmpty
                   ? GridView.builder(
                       itemCount: categoryProducts.length,
-                      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                      padding: const EdgeInsets.all(15.0),
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
                         mainAxisSpacing: 12.0,
@@ -69,7 +69,7 @@ class ProductPage extends ConsumerWidget {
 
                         return ProductCard(
                           onPressed: () => controller.gotToProductDetailsPage(
-                              context, ref, product, heroTag),
+                              context, ref, product.id, heroTag),
                           onIncrement: () =>
                               onCartIncrement(context, ref, product, true),
                           onDecrement: () =>

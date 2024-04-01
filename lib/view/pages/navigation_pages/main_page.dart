@@ -1,8 +1,11 @@
-import 'package:farmers_marketplace/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cuberto_bottom_bar/cuberto_bottom_bar.dart';
 
+import '../../../providers.dart';
+import '../../../router/route/app_routes.dart';
+import '../../widgets/dialogs.dart';
+import '../auth_pages/welcome_page.dart';
 import 'category_page.dart';
 import 'home_page.dart';
 import 'notification_page.dart';
@@ -21,14 +24,6 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
   final _pageController = PageController();
 
   @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.invalidate(userFutureProvider);
-    });
-    super.initState();
-  }
-
-  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
@@ -44,12 +39,34 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
   }
 
   void _onTap(int index) {
+    if (ref.read(userFutureProvider).value == null && index == 3) {
+      _showLogoutDialog();
+      return;
+    }
     ref.read(_currentIndexProvider.notifier).update((state) => index);
     _pageController.jumpToPage(index);
   }
 
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return ConfirmDialog(
+          title: 'Logout',
+          body: 'You sure you want to logout of guest account?',
+          actionLabel: 'Logout',
+          iconData: Icons.logout,
+          actionColor: Colors.red,
+          actionButtonBackgroundColor: Colors.red,
+          onAction: () => pushToAndClearStack(context, const WelcomePage()),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final userFuture = ref.watch(userFutureProvider);
     final currentIndex = ref.watch(_currentIndexProvider);
 
     return WillPopScope(
@@ -102,11 +119,18 @@ class _NavigationPageState extends ConsumerState<NavigationPage> {
                 title: 'Notifications',
                 tabColor: Theme.of(context).primaryColor,
               ),
-              TabData(
-                iconData: Icons.person,
-                title: 'Profile',
-                tabColor: Theme.of(context).primaryColor,
-              ),
+              if (userFuture.value == null)
+                TabData(
+                  iconData: Icons.logout,
+                  title: 'Logout',
+                  tabColor: Theme.of(context).primaryColor,
+                )
+              else
+                TabData(
+                  iconData: Icons.person,
+                  title: 'Profile',
+                  tabColor: Theme.of(context).primaryColor,
+                ),
             ],
             onTabChangedListener: (int index, _, __) => _onTap(index),
           ),

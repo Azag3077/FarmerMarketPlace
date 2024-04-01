@@ -1,17 +1,71 @@
+import 'package:farmers_marketplace/controller.dart';
 import 'package:farmers_marketplace/core/constants/assets.dart';
 import 'package:farmers_marketplace/core/extensions/double.dart';
 import 'package:farmers_marketplace/main.dart';
 import 'package:farmers_marketplace/view/pages/add_address_page.dart';
 import 'package:farmers_marketplace/view/pages/addresses_page.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants/flutterwave_keys.dart';
 import '../../providers.dart';
+import '../../utils.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/buttons.dart';
 
+import 'package:flutterwave_standard/flutterwave.dart';
+
 class CheckoutPage extends ConsumerWidget {
   const CheckoutPage({Key? key}) : super(key: key);
+
+  void handlePaymentInitialization(BuildContext context, WidgetRef ref) async {
+    final carts = ref.read(cartStateProvider)!;
+    final shippingFee = ref.read(shippingFeeProvider).value;
+    final primaryAddress = ref.read(primaryAddressProvider);
+
+    if (primaryAddress == null) {
+      ref.invalidate(userFutureProvider);
+      return;
+    }
+
+    if (shippingFee == null) {
+      ref.invalidate(userFutureProvider);
+      return;
+    }
+
+    final amount = (carts.map((c) => c.price * c.qty).reduce((a, b) => a + b));
+
+    final Customer customer = Customer(
+      name: primaryAddress.fullName,
+      phoneNumber: primaryAddress.phoneNumber,
+      email: ref.read(userFutureProvider).value!.email,
+    );
+
+    final transactionReference = generateUniqueTransactionId();
+
+    debugPrint(transactionReference);
+
+    final Flutterwave flutterwave = Flutterwave(
+      context: context,
+      publicKey: FlutterWaveKeys.public,
+      currency: "NGN",
+      redirectUrl: "https://www.google.com",
+      txRef: transactionReference,
+      amount: (amount + shippingFee).toString(),
+      customer: customer,
+      paymentOptions: "ussd, card, barter, credit, banktransfer, account, nqr",
+      customization: Customization(title: "My Payment"),
+      isTestMode: kDebugMode,
+      meta: {},
+    );
+
+    final az = await flutterwave.charge();
+
+    debugPrint('Checkout Response $az');
+    debugPrint('Checkout Response ${az.status}');
+    controller.showToast(az.status ?? 'Failed');
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -289,7 +343,7 @@ class CheckoutPage extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8.0),
                   CustomButton(
-                    onPressed: () {},
+                    onPressed: () => handlePaymentInitialization(context, ref),
                     text: 'Complete order',
                     margin: EdgeInsets.zero,
                   ),

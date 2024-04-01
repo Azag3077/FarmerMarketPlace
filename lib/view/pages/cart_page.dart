@@ -1,9 +1,8 @@
 import 'package:farmers_marketplace/controller.dart';
 import 'package:farmers_marketplace/core/constants/assets.dart';
-import 'package:farmers_marketplace/core/extensions/string.dart';
+import 'package:farmers_marketplace/core/extensions/double.dart';
 import 'package:farmers_marketplace/main.dart';
 import 'package:farmers_marketplace/providers.dart';
-import 'package:farmers_marketplace/view/pages/details_page.dart';
 import 'package:farmers_marketplace/view/widgets/app_bar.dart';
 import 'package:farmers_marketplace/view/widgets/buttons.dart';
 import 'package:flutter/material.dart';
@@ -78,8 +77,7 @@ class CartPage extends ConsumerWidget {
     final product = ref
         .read(productsStateProvider)!
         .singleWhere((p) => p.id == cart.prodId);
-    ref.read(productProvider.notifier).update((_) => product);
-    controller.gotToProductDetailsPage(context, ref, product, heroTag);
+    controller.gotToProductDetailsPage(context, ref, product.id, heroTag);
   }
 
   @override
@@ -131,8 +129,17 @@ class CartPage extends ConsumerWidget {
                     ),
                     child: Row(
                       children: <Widget>[
-                        Text(
-                            '₦ ${carts == null ? '___' : carts.isEmpty ? '0.00' : carts.map((c) => c.price * c.qty).reduce((a, b) => a + b).toString().formatToPrice}'),
+                        if (carts == null)
+                          Image.asset(AppImages.loader, height: 22.0)
+                        else if (carts.isEmpty)
+                          Text(0.0.toPrice())
+                        else
+                          Text(
+                            carts
+                                .map((c) => c.price * c.qty)
+                                .reduce((a, b) => a + b)
+                                .toPrice(),
+                          ),
                       ],
                     ),
                   ),
@@ -173,18 +180,9 @@ class CartPage extends ConsumerWidget {
                               unit: product.unit,
                               price: product.price,
                               qty: product.qty,
+                              heroTag: heroTag,
                               onPressed: () =>
                                   _onPressed(context, ref, product, heroTag),
-                              // onPressed: () {
-                              //   final product = ref
-                              //       .read(productsStateProvider)!
-                              //       .singleWhere((p) => p.id == cart.prodId);
-                              //   ref
-                              //       .read(productProvider.notifier)
-                              //       .update((_) => product);
-                              //   controller.gotToProductDetailsPage(
-                              //       context, product, heroTag);
-                              // },
                               onDelete: () => onCartIncrement(
                                 context,
                                 ref,

@@ -184,6 +184,9 @@ class ProfilePage extends ConsumerWidget {
                   title: 'Logout',
                   body: 'You sure you want to logout of your account?',
                   actionLabel: 'Logout',
+                  iconData: Icons.logout,
+                  actionColor: Colors.red,
+                  actionButtonBackgroundColor: Colors.red,
                   onAction: () => _onLogout(context),
                 );
               },

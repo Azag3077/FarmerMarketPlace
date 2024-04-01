@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../controller.dart';
 import '../../core/constants/assets.dart';
 import '../../core/constants/storage.dart';
 import '../../router/route.dart';
 import 'auth_pages/welcome_page.dart';
-import 'navigation_pages/main_page.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -31,7 +31,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       if (userId == null) {
         pushReplacementTo(context, const WelcomePage());
       } else {
-        pushReplacementTo(context, const NavigationPage());
+        controller.gotoHomePage(context, ref);
       }
     });
   }
