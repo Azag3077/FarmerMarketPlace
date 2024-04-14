@@ -269,6 +269,18 @@ class ApiService {
     return List.empty();
   }
 
+  Future<List<ProductImage>> productsImagesFuture(int userId) async {
+    final url = Uri.parse('${ApiEndpoints.productsImages}/$userId');
+    final response = await _getRequests(url);
+
+    if (response.status == ResponseStatus.success) {
+      return response.data
+          .map<ProductImage>((data) => ProductImage.fromJson(data))
+          .toList();
+    }
+    return List.empty();
+  }
+
   Future<List<Category>> categoriesFuture() async {
     final response = await _getRequests(ApiEndpoints.categories);
 

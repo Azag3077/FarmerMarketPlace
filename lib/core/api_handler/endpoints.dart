@@ -19,6 +19,7 @@ class ApiEndpoints {
   static const String cart = '$baseUrl/cart';
 
   static const String products = '$baseUrl/products';
+  static const String productsImages = '$baseUrl/products/prod_images';
 
   static final Uri like = Uri.parse('$baseUrl/like');
 

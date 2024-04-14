@@ -137,7 +137,7 @@ final _isSelectedStateProvider =
     StateProvider.autoDispose<csc.State?>((ref) => null);
 
 final _isSelectedCityProvider =
-    StateProvider.autoDispose<csc.City?>((ref) => null);
+    StateProvider.autoDispose<String?>((ref) => null);
 
 final _searchProvider = StateProvider.autoDispose<String>((ref) => '');
 
@@ -326,11 +326,11 @@ class CityBottomSheet extends ConsumerStatefulWidget {
     Key? key,
     this.selected,
     required this.onSelected,
-    required this.state,
+    // required this.state,
   }) : super(key: key);
-  final csc.City? selected;
-  final ValueChanged<csc.City> onSelected;
-  final csc.State state;
+  final String? selected;
+  final ValueChanged<String> onSelected;
+  // final csc.State state;
 
   @override
   ConsumerState<CityBottomSheet> createState() => _CityBottomSheetState();
@@ -353,7 +353,7 @@ class _CityBottomSheetState extends ConsumerState<CityBottomSheet> {
     super.dispose();
   }
 
-  void _onSelected(BuildContext context, WidgetRef ref, csc.City city) {
+  void _onSelected(BuildContext context, WidgetRef ref, String city) {
     widget.onSelected(city);
     ref.read(_isSelectedCityProvider.notifier).update((_) => city);
 
@@ -363,10 +363,9 @@ class _CityBottomSheetState extends ConsumerState<CityBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final citiesFuture = ref.watch(citiesFutureProvider(widget.state));
+    final citiesFuture = ref.watch(citiesFutureProvider);
     final isSelected = ref.watch(_isSelectedCityProvider);
     final search = ref.watch(_searchProvider);
-
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 15.0),
@@ -404,9 +403,9 @@ class _CityBottomSheetState extends ConsumerState<CityBottomSheet> {
           ),
           Expanded(
             child: citiesFuture.when(
-              data: (countries) {
-                final sorted = countries.where((city) =>
-                    city.name.toLowerCase().contains(search.toLowerCase()));
+              data: (cities) {
+                final sorted = cities.where((city) =>
+                    city.toLowerCase().contains(search.toLowerCase()));
                 if (sorted.isEmpty) {
                   return const Center(
                     child: Padding(
@@ -443,7 +442,7 @@ class _CityBottomSheetState extends ConsumerState<CityBottomSheet> {
                         children: <Widget>[
                           Expanded(
                             child: Text(
-                              city.name,
+                              city,
                               style: TextStyle(
                                 color: Colors.blueGrey.shade700,
                                 fontWeight: FontWeight.normal,

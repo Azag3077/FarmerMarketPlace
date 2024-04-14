@@ -18,7 +18,7 @@ import '../widgets/text_fields.dart';
 final _isValidatedProvider = StateProvider.autoDispose<bool>((ref) => false);
 final _isLoadingProvider = StateProvider.autoDispose<bool>((ref) => false);
 final _stateProvider = StateProvider.autoDispose<csc.State?>((ref) => null);
-final _cityProvider = StateProvider.autoDispose<csc.City?>((ref) => null);
+final _cityProvider = StateProvider.autoDispose<String?>((ref) => null);
 final _stateErrorProvider = StateProvider.autoDispose<bool>((ref) => false);
 final _cityErrorProvider = StateProvider.autoDispose<bool>((ref) => false);
 final _hasChangedProvider = StateProvider.autoDispose<bool>((ref) => false);
@@ -61,11 +61,10 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
 
     ref.read(allStatesFutureProvider.future).then((states) {
       final state = states.singleWhere((s) => s.name == widget.address!.state);
-      ref.read(_stateProvider.notifier).update((_) => state);
+      ref.read(_stateProvider.notifier).state = state;
     });
     ref.read(allCitiesFutureProvider.future).then((cities) {
-      final city = cities.singleWhere((c) => c.name == widget.address!.city);
-      ref.read(_cityProvider.notifier).update((_) => city);
+      ref.read(_cityProvider.notifier).state = widget.address!.city;
     });
   }
 
@@ -81,9 +80,9 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
   Future<void> _onSave(BuildContext context) async {
     ref.read(_isValidatedProvider.notifier).update((state) => true);
 
-    if (ref.read(_stateProvider) == null) {
-      ref.read(_stateErrorProvider.notifier).update((_) => true);
-    }
+    // if (ref.read(_stateProvider) == null) {
+    //   ref.read(_stateErrorProvider.notifier).update((_) => true);
+    // }
     if (ref.read(_cityProvider) == null) {
       ref.read(_cityErrorProvider.notifier).update((_) => true);
     }
@@ -110,8 +109,9 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
 
     final fullName = _fullNameController.text.trim();
     final address = _addressController.text.trim();
-    final state = ref.read(_stateProvider)!.name;
-    final city = ref.read(_cityProvider)!.name;
+    // final state = ref.read(_stateProvider)!.name;
+    const state = 'Lagos State';
+    final city = ref.read(_cityProvider)!;
     final phone = _phoneNumberController.text.trim();
     final additionalPhone = _phoneNumberOptController.text.trim();
     final response = await apiService.addAddress(user.id, fullName, address,
@@ -161,12 +161,12 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
     if (state != ref.read(_stateProvider)) {
       ref.read(_cityProvider.notifier).update((state) => null);
     }
-    ref.watch(_stateProvider.notifier).update((_) => state);
+    ref.watch(_stateProvider.notifier).state = state;
     _trackFieldChanges();
   }
 
-  void _onCitySelected(csc.City city) {
-    ref.watch(_cityProvider.notifier).update((_) => city);
+  void _onCitySelected(String city) {
+    ref.watch(_cityProvider.notifier).state = city;
     _trackFieldChanges();
   }
 
@@ -177,8 +177,8 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
           _phoneNumberController.text.trim() != widget.address?.phoneNumber ||
           _phoneNumberOptController.text.trim() !=
               widget.address?.additionalPhoneNumber ||
-          ref.read(_stateProvider)?.name != widget.address?.state ||
-          ref.read(_cityProvider)?.name != widget.address?.city;
+          // ref.read(_stateProvider)?.name != widget.address?.state ||
+          ref.read(_cityProvider) != widget.address?.city;
     });
   }
 
@@ -188,7 +188,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
     final isLoading = ref.watch(_isLoadingProvider);
     final stateError = ref.watch(_stateErrorProvider);
     final cityError = ref.watch(_cityErrorProvider);
-    final state = ref.watch(_stateProvider);
+    // final state = ref.watch(_stateProvider);
     final city = ref.watch(_cityProvider);
 
     final hasChanged = ref.watch(_hasChangedProvider);
@@ -226,36 +226,41 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
                           labelText: 'State/Region',
                           hintText: 'Select state',
                           errorText: 'Please select a state',
-                          text: state?.name,
                           hasError: stateError,
+                          text: 'Lagos State',
                           onPressed: () {
-                            ref
-                                .read(_stateErrorProvider.notifier)
-                                .update((_) => false);
-                            showModalBottomSheet(
-                              context: context,
-                              clipBehavior: Clip.hardEdge,
-                              isScrollControlled: true,
-                              constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.sizeOf(context).height * .75,
-                              ),
-                              builder: (_) {
-                                return StateBottomSheet(
-                                  selected: state,
-                                  onSelected: _onStateSelected,
-                                );
-                              },
-                            );
+                            controller.showToast('Only Lagos state is allowed');
                           },
+                          // text: state?.name,
+                          // onPressed: () {
+                          //   ref
+                          //       .read(_stateErrorProvider.notifier)
+                          //       .update((_) => false);
+                          //   showModalBottomSheet(
+                          //     context: context,
+                          //     clipBehavior: Clip.hardEdge,
+                          //     isScrollControlled: true,
+                          //     constraints: BoxConstraints(
+                          //       maxHeight:
+                          //           MediaQuery.sizeOf(context).height * .75,
+                          //     ),
+                          //     builder: (_) {
+                          //       return StateBottomSheet(
+                          //         selected: state,
+                          //         onSelected: _onStateSelected,
+                          //       );
+                          //     },
+                          //   );
+                          // },
                         ),
                         CustomChevronButton(
                           labelText: 'City',
                           hintText: 'Select city',
                           errorText: 'Please select a city',
-                          text: city?.name,
+                          text: city,
                           hasError: cityError,
-                          onPressed: state == null
+                          // onPressed: state == null
+                          onPressed: false
                               ? () {
                                   snackbar(
                                     context: context,
@@ -281,7 +286,7 @@ class _AddAddressPageState extends ConsumerState<AddAddressPage> {
                                       return CityBottomSheet(
                                         selected: city,
                                         onSelected: _onCitySelected,
-                                        state: state,
+                                        // state: state,
                                       );
                                     },
                                   );

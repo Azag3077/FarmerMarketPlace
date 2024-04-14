@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../controller.dart';
 import '../../../core/constants/storage.dart';
 import '../../../providers.dart';
 import '../../../router/route.dart';
@@ -14,6 +15,7 @@ import '../../widgets/place_holders.dart';
 import '../addresses_page.dart';
 import '../auth_pages/welcome_page.dart';
 import '../edit_profile.dart';
+import '../liked_product_page.dart';
 import '../orders_page.dart';
 import '../settings_page.dart';
 import '../supports.dart';
@@ -55,10 +57,7 @@ class ProfilePage extends ConsumerWidget {
                       elevation: 0,
                       onPressed: () => pushTo(context, const EditProfilePage()),
                       color: Theme.of(context).primaryColor.withOpacity(.2),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 15.0,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(15.0),
                       ),
@@ -68,6 +67,7 @@ class ProfilePage extends ConsumerWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: <Widget>[
+                                const SizedBox(height: 15.0),
                                 userFuture.when(
                                   data: (user) {
                                     return Column(
@@ -88,6 +88,20 @@ class ProfilePage extends ConsumerWidget {
                                               .textTheme
                                               .bodyMedium,
                                         ),
+                                        const SizedBox(height: 16.0),
+                                        Row(
+                                          children: <Widget>[
+                                            const Text('Gender:'),
+                                            const SizedBox(width: 4.0),
+                                            Text(
+                                              'Male',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyMedium,
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8.0),
                                       ],
                                     );
                                   },
@@ -158,6 +172,11 @@ class ProfilePage extends ConsumerWidget {
                     title: 'My Orders',
                   ),
                   CustomListTile(
+                    onTap: () => pushTo(context, const LikedProductPage()),
+                    leadingIconData: CupertinoIcons.cart,
+                    title: 'My Favorites',
+                  ),
+                  CustomListTile(
                     onTap: () => pushTo(context, const SupportsPage()),
                     leadingIconData: Icons.support_agent_rounded,
                     title: 'Support',
@@ -171,6 +190,11 @@ class ProfilePage extends ConsumerWidget {
                     onTap: () => pushTo(context, const TermsAndConditions()),
                     leadingIconData: CupertinoIcons.question_circle,
                     title: 'Terms and conditions',
+                  ),
+                  CustomListTile(
+                    onTap: () => controller.shareApp(),
+                    leadingIconData: CupertinoIcons.question_circle,
+                    title: 'Share this app',
                   ),
                 ],
               ),

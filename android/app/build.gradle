@@ -23,7 +23,7 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.farmers_marketplace"
+    namespace "com.farmers.marketplace"
     compileSdkVersion 34
     ndkVersion flutter.ndkVersion
 
@@ -42,13 +42,22 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "com.example.farmers_marketplace"
+        applicationId "com.farmers.marketplace"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdkVersion 21
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+    }
+
+    signingConfigs {
+        release {
+            storeFile file('../../.keystore.jks')
+            storePassword localProperties.getProperty('storePassword')
+            keyAlias localProperties.getProperty('keyAlias')
+            keyPassword localProperties.getProperty('keyPassword')
+        }
     }
 
     buildTypes {
@@ -65,3 +74,7 @@ flutter {
 }
 
 dependencies {}
+
+//keytool -genkey -v -keystore keystore.jks -alias my-key-alias -keyalg RSA -keysize 2048 -validity 10000
+//flutter build appbundle --release
+//C:\Users\Azag\AppData\Local\Android\Sdk\build-tools\33.0.1\apksigner.bat verify --verbose C:\Users\Azag\FlutterProjects\farmers_marketplace\build\app\outputs\bundle\release

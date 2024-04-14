@@ -20,9 +20,9 @@ abstract class AppImages {
   static const String loader = 'assets/loader/loader.gif';
 }
 
-abstract class AppTexts {
+abstract class AppData {
   static const String _root = 'assets/texts';
 
   static const String termsAndConditions = '$_root/terms_and_conditions.txt';
-  static const String icon = '$_root/icon.png';
+  static const String lagosCity = 'assets/json/lagos_city.json';
 }

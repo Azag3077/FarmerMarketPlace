@@ -41,4 +41,4 @@ class TermsAndConditions extends StatelessWidget {
 }
 
 Future<String> _termsAndConditions() async =>
-    await rootBundle.loadString(AppTexts.termsAndConditions);
+    await rootBundle.loadString(AppData.termsAndConditions);

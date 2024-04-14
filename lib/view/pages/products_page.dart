@@ -74,6 +74,7 @@ class ProductPage extends ConsumerWidget {
                               onCartIncrement(context, ref, product, true),
                           onDecrement: () =>
                               onCartIncrement(context, ref, product, false),
+                          onShare: () => controller.shareProduct(product),
                           heroTag: heroTag,
                           image: product.image,
                           name: product.name,

@@ -7,6 +7,7 @@ import '../../core/constants/assets.dart';
 import '../../providers.dart';
 import '../widgets/app_bar.dart';
 import '../widgets/card.dart';
+import '../widgets/place_holders.dart';
 import '../widgets/text_fields.dart';
 
 final _searchProvider = StateProvider.autoDispose<String>((ref) => '');
@@ -36,7 +37,9 @@ class SearchPage extends ConsumerWidget {
             onChanged: (text) =>
                 ref.read(_searchProvider.notifier).update((_) => text),
           ),
-          if (sorted!.isEmpty)
+          if (sorted == null)
+            const CustomLoadingWidget()
+          else if (sorted.isEmpty)
             Expanded(
               child: SingleChildScrollView(
                 child: Column(
@@ -69,12 +72,15 @@ class SearchPage extends ConsumerWidget {
                   return SearchProductCard(
                     onPressed: () => controller.gotToProductDetailsPage(
                         context, ref, product.id, heroTag),
+                    onShare: () => controller.shareProduct(product),
                     search: search,
                     imageUrl: product.image,
                     name: product.name,
                     heroTag: heroTag,
                     rating: product.rating,
                     price: product.price,
+                    weight: product.weight,
+                    unit: product.unit,
                   );
                 },
               ),

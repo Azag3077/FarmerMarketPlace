@@ -1,5 +1,4 @@
 import 'package:farmers_marketplace/core/api_handler/endpoints.dart';
-import 'package:flutter/cupertino.dart';
 
 class Product {
   Product({

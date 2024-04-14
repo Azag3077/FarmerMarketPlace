@@ -1,3 +1,6 @@
+import 'dart:developer';
+
+import 'package:farmers_marketplace/core/extensions/double.dart';
 import 'package:farmers_marketplace/models/product.dart';
 import 'package:farmers_marketplace/view/pages/auth_pages/welcome_page.dart';
 import 'package:farmers_marketplace/view/widgets/snackbar.dart';
@@ -5,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share/share.dart';
 
 import 'core/api_handler/service.dart';
 import 'core/constants/storage.dart';
@@ -104,6 +108,9 @@ Future<bool> requestOTP(String email, [bool resend = false]) async {
 }
 
 class Controller {
+  final playStoreUrl = 'https://play.google.com/store/apps/details?id=';
+  final packageName = 'com.reotech.farmers_marketplace';
+
   void onConnectionError(
     BuildContext context, {
     String? title,
@@ -187,6 +194,82 @@ class Controller {
       textColor: Colors.white,
       fontSize: 16.0,
     );
+  }
+
+  void shareProduct(Product product) {
+    final content = 'Buy ${product.name} ${product.weight > 0 ? ' '
+            '(${product.weight}${product.unit})' : ''} for just '
+        '*${product.price.toPrice()}* on *Farmer Marketplace*\n'
+        'Clink link below to download app now.\n\n'
+        '$playStoreUrl$packageName';
+    Share.share(content, subject: 'Share Product');
+  }
+
+  void shareApp() {
+    Share.share('$playStoreUrl$packageName', subject: 'Share app');
+  }
+
+  void toggleLike(BuildContext context, WidgetRef ref, int prodId) {
+    final user = ref.read(userFutureProvider).value;
+
+    if (user == null) {
+      controller.showMustLoginDialog(
+        context,
+        'Sorry, you need to be logged in before you can like a product.',
+      );
+      return;
+    }
+
+    ref.read(isLikedProvider(prodId).notifier).update((isLiked) {
+      ref.read(likeCountProvider(prodId).notifier).update((count) {
+        return count + (!isLiked ? 1 : -1);
+      });
+      return !isLiked;
+    });
+
+    apiService
+        .like(prodId, user.id)
+        .then((response) => _checkResponse(context, ref, response, prodId));
+  }
+
+  Future<void> _checkResponse(
+    BuildContext context,
+    WidgetRef ref,
+    Response response,
+    int prodId,
+  ) async {
+    if (response.status == ResponseStatus.success) {
+      controller.showToast(response.message!);
+
+      final prefs = await SharedPreferences.getInstance();
+      const key = '${StorageKey.likedProduct}-${StorageKey.userId}';
+      final likedProducts = prefs.getStringList(key) ?? [];
+
+      if (ref.read(isLikedProvider(prodId))) {
+        if (!likedProducts.contains(prodId.toString())) {
+          likedProducts.add(prodId.toString());
+        }
+      } else if (likedProducts.contains(prodId.toString())) {
+        likedProducts.remove(prodId.toString());
+      }
+
+      await prefs.setStringList(key, likedProducts);
+      ref.invalidate(likedProductsFutureProvider);
+      log(likedProducts.toString());
+    } else {
+      ref.read(isLikedProvider(prodId).notifier).update((isLiked) {
+        ref.read(likeCountProvider(prodId).notifier).update((count) {
+          return count + (!isLiked ? 1 : -1);
+        });
+        return !isLiked;
+      });
+      snackbar(
+        context: context,
+        title: 'Failed',
+        message: response.message ?? 'Failed to perform request',
+        contentType: ContentType.failure,
+      );
+    }
   }
 }
 

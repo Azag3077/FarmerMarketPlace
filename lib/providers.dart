@@ -1,7 +1,13 @@
+import 'dart:convert';
+
 import 'package:country_state_city/country_state_city.dart';
 import 'package:farmers_marketplace/core/api_handler/service.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/constants/assets.dart';
+import 'core/constants/storage.dart';
 import 'models/models.dart';
 
 final isGuestUserProvider = StateProvider<bool>((ref) => true);
@@ -39,9 +45,18 @@ final productsStateProvider = StateProvider<List<Product>?>((ref) {
   return ref.watch(productsFutureProvider).value;
 });
 
+final productProvider = StateProvider.family<Product, int>((ref, prodId) {
+  return ref.watch(productsStateProvider)!.singleWhere((p) => prodId == p.id);
+});
+
 final selectedProductProvider =
     StateProvider.family<Product, int>((ref, prodId) {
   return ref.watch(productsStateProvider)!.singleWhere((p) => prodId == p.id);
+});
+
+final productImagesProvider =
+    FutureProvider.family<List<ProductImage>, int>((ref, prodId) {
+  return apiService.productsImagesFuture(prodId);
 });
 
 final isLikedFutureProvider =
@@ -59,6 +74,26 @@ final isLikedFutureProvider =
 
 final isLikedProvider = StateProvider.family<bool, int>((ref, prodId) {
   return ref.watch(isLikedFutureProvider(prodId)).value ?? false;
+});
+
+final likedProductsFutureProvider = FutureProvider<List<Product>?>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  const key = '${StorageKey.likedProduct}-${StorageKey.userId}';
+  final prodIds = prefs.getStringList(key) ?? [];
+  final products = ref.watch(productsStateProvider);
+
+  if (products == null) return null;
+
+  List<Product> result = [];
+
+  for (var prodId in prodIds) {
+    final lst = products.where((p) => int.parse(prodId) == p.id);
+
+    if (lst.isNotEmpty) {
+      result.add(lst.first);
+    }
+  }
+  return result;
 });
 
 final likeCountFutureProvider =
@@ -130,9 +165,11 @@ final allStatesFutureProvider =
 final allCitiesFutureProvider =
     FutureProvider<List<City>>((ref) => getCountryCities('NG'));
 
-final citiesFutureProvider =
-    FutureProvider.family<List<City>, State>((ref, state) async {
-  return await getStateCities(state.countryCode, state.isoCode);
+final citiesFutureProvider = FutureProvider<List<String>>((ref) async {
+  final lagosCitiesFuture = await rootBundle.loadString(AppData.lagosCity);
+  return jsonDecode(lagosCitiesFuture).cast<String>();
+  // final citiesFuture = await getStateCities(state.countryCode, state.isoCode);
+  // return citiesFuture.map((city) => city.name).toList();
 });
 
 final addressesFutureProvider = FutureProvider<List<Address>?>((ref) {

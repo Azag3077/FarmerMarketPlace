@@ -4,9 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../controller.dart';
 import '../../../core/constants/assets.dart';
-import '../../../providers.dart';
 import '../../../router/route/app_routes.dart';
-import '../navigation_pages/main_page.dart';
 import '../terms_and_conditions.dart';
 import '../../widgets/buttons.dart';
 import 'login.dart';
@@ -95,7 +93,7 @@ class WelcomePage extends StatelessWidget {
                   ),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),
