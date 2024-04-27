@@ -45,3 +45,6 @@ app.*.map.json
 
 .env
 .keystore.jks
+.keystore1.jks
+.keystore2.jks
+.keystore3.jks
